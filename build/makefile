@@ -38,10 +38,10 @@ include $(SRC_MAKEFILES)
 
 # Additional include directories, applied to objects built for this target.
 INCLUDE_DIRS += CMSIS/Include
-INCLUDE_DIRS += CMSIS/Device/ST/STM32F10x/Include
+INCLUDE_DIRS += CMSIS/Device/ST/STM32F4xx/Include
 
 # Compiler flags
-CFLAGS =  -g3 -gdwarf-2 -Os -mcpu=cortex-m3 -mthumb 
+CFLAGS =  -g3 -gdwarf-2 -Os -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 
 CFLAGS += $(patsubst %,-I$(SRC_PATH)/%,$(INCLUDE_DIRS)) -I.
 CFLAGS += -ffunction-sections -Wall -Wno-switch -fmessage-length=0
 
@@ -50,7 +50,7 @@ CFLAGS += -MD -MP -MF $@.d
 
 # Target specific defines
 CFLAGS += -DUSE_STDPERIPH_DRIVER
-CFLAGS += -DSTM32F10X_MD
+CFLAGS += -DSTM32F40_41xxx
 
 ifeq ("$(USE_SWD_JTAG)","y") 
 CFLAGS += -DUSE_SWD_JTAG
