@@ -83,11 +83,11 @@ const uint16_t BUTTON_GPIO_PIN_SOURCE[] = {BUTTON1_EXTI_PIN_SOURCE, BUTTON2_EXTI
 const uint16_t BUTTON_IRQn[] = {BUTTON1_EXTI_IRQn, BUTTON2_EXTI_IRQn};
 EXTITrigger_TypeDef BUTTON_EXTI_TRIGGER[] = {BUTTON1_EXTI_TRIGGER, BUTTON2_EXTI_TRIGGER};
 
-uint16_t CORE_FW_Version_SysFlag = 0xFFFF;
-uint16_t NVMEM_SPARK_Reset_SysFlag = 0xFFFF;
-uint16_t FLASH_OTA_Update_SysFlag = 0xFFFF;
-uint16_t OTA_FLASHED_Status_SysFlag = 0xFFFF;
-uint16_t Factory_Reset_SysFlag = 0xFFFF;
+uint32_t CORE_FW_Version_SysFlag = 0xFFFFFFFF;
+uint32_t NVMEM_SPARK_Reset_SysFlag = 0xFFFFFFFF;
+uint32_t FLASH_OTA_Update_SysFlag = 0xFFFFFFFF;
+uint32_t OTA_FLASHED_Status_SysFlag = 0xFFFFFFFF;
+uint32_t Factory_Reset_SysFlag = 0xFFFFFFFF;
 
 uint32_t WRPR_Value = 0xFFFFFFFF;
 uint32_t Flash_Pages_Protected = 0x0;
@@ -140,16 +140,16 @@ void Set_System(void)
 	 */
 
 	/* Enable PWR and BKP clock */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
 
 	/* Enable write access to Backup domain */
 	PWR_BackupAccessCmd(ENABLE);
 
 	/* Should we execute System Standby mode */
-	if(BKP_ReadBackupRegister(BKP_DR9) == 0xA5A5)
+	if(RTC_ReadBackupRegister(BKP_DR9) == 0x0000A5A5)
 	{
 		/* Clear Standby mode system flag */
-		BKP_WriteBackupRegister(BKP_DR9, 0xFFFF);
+		RTC_WriteBackupRegister(BKP_DR9, 0xFFFFFFFF);
 
 		/* Request to enter STANDBY mode */
 		PWR_EnterSTANDBYMode();
@@ -349,7 +349,7 @@ void RTC_Configuration(void)
 void Enter_STANDBY_Mode(void)
 {
 	/* Execute Standby mode on next system reset */
-	BKP_WriteBackupRegister(BKP_DR9, 0xA5A5);
+	RTC_WriteBackupRegister(BKP_DR9, 0x0000A5A5);
 
 	/* Reset System */
 	NVIC_SystemReset();
@@ -1263,19 +1263,19 @@ void Load_SystemFlags(void)
 	if(!USE_SYSTEM_FLAGS)
 		return;
 
-	CORE_FW_Version_SysFlag = (*(__IO uint16_t*) Address);
+	CORE_FW_Version_SysFlag = (*(__IO uint32_t*) Address);
 	Address += 2;
 
-	NVMEM_SPARK_Reset_SysFlag = (*(__IO uint16_t*) Address);
+	NVMEM_SPARK_Reset_SysFlag = (*(__IO uint32_t*) Address);
 	Address += 2;
 
-	FLASH_OTA_Update_SysFlag = (*(__IO uint16_t*) Address);
+	FLASH_OTA_Update_SysFlag = (*(__IO uint32_t*) Address);
 	Address += 2;
 
-	OTA_FLASHED_Status_SysFlag = (*(__IO uint16_t*) Address);
+	OTA_FLASHED_Status_SysFlag = (*(__IO uint32_t*) Address);
 	Address += 2;
 
-	Factory_Reset_SysFlag = (*(__IO uint16_t*) Address);
+	Factory_Reset_SysFlag = (*(__IO uint32_t*) Address);
 	Address += 2;
 }
 
@@ -1488,7 +1488,7 @@ void FLASH_Begin(uint32_t sFLASH_Address)
 	LED_SetRGBColor(RGB_COLOR_MAGENTA);
     LED_On(LED_RGB);
 
-    OTA_FLASHED_Status_SysFlag = 0x0000;
+    OTA_FLASHED_Status_SysFlag = 0x00000000;
 	//FLASH_OTA_Update_SysFlag = 0x5555;
 	Save_SystemFlags();
 	//BKP_WriteBackupRegister(BKP_DR10, 0x5555);
@@ -1546,10 +1546,10 @@ void FLASH_End(void)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	FLASH_OTA_Update_SysFlag = 0x0005;
+	FLASH_OTA_Update_SysFlag = 0x00000005;
 	Save_SystemFlags();
 
-	BKP_WriteBackupRegister(BKP_DR10, 0x0005);
+	RTC_WriteBackupRegister(BKP_DR10, 0x00000005);
 
     USB_Cable_Config(DISABLE);
 
@@ -1629,7 +1629,7 @@ void FACTORY_Flash_Reset(void)
   // Restore the Factory programmed application firmware from External Flash
   FLASH_Restore(EXTERNAL_FLASH_FAC_ADDRESS);
 
-  Factory_Reset_SysFlag = 0xFFFF;
+  Factory_Reset_SysFlag = 0xFFFFFFFF;
 
   Finish_Update();
 }
@@ -1647,21 +1647,21 @@ void OTA_Flash_Reset(void)
 	//First take backup of the current application firmware to External Flash
 	FLASH_Backup(EXTERNAL_FLASH_BKP_ADDRESS);
 
-	FLASH_OTA_Update_SysFlag = 0x5555;
+	FLASH_OTA_Update_SysFlag = 0x00005555;
 	Save_SystemFlags();
-	BKP_WriteBackupRegister(BKP_DR10, 0x5555);
+	_WriteBackupRegister(BKP_DR10, 0x00005555);
 
 	//Restore the OTA programmed application firmware from External Flash
 	FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
 
-	OTA_FLASHED_Status_SysFlag = 0x0001;
+	OTA_FLASHED_Status_SysFlag = 0x00000001;
 
 	Finish_Update();
 }
 
 bool OTA_Flashed_GetStatus(void)
 {
-	if(OTA_FLASHED_Status_SysFlag == 0x0001)
+	if(OTA_FLASHED_Status_SysFlag == 0x00000001)
 		return true;
 	else
 		return false;
@@ -1669,7 +1669,7 @@ bool OTA_Flashed_GetStatus(void)
 
 void OTA_Flashed_ResetStatus(void)
 {
-    OTA_FLASHED_Status_SysFlag = 0x0000;
+    OTA_FLASHED_Status_SysFlag = 0x00000000;
 	Save_SystemFlags();
 }
 
@@ -1681,10 +1681,10 @@ void OTA_Flashed_ResetStatus(void)
 *******************************************************************************/
 void Finish_Update(void)
 {
-	FLASH_OTA_Update_SysFlag = 0x5000;
+	FLASH_OTA_Update_SysFlag = 0x00005000;
 	Save_SystemFlags();
 
-	BKP_WriteBackupRegister(BKP_DR10, 0x5000);
+	RTC_WriteBackupRegister(BKP_DR10, 0x00005000);
 
     USB_Cable_Config(DISABLE);
 

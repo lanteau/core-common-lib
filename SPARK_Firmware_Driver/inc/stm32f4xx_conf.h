@@ -30,7 +30,7 @@
 /* Includes ------------------------------------------------------------------*/
 /* Uncomment the line below to enable peripheral header file inclusion */
 #include "stm32f4xx_adc.h"
-//#include "stm32f4xx_bkp.h" # There is no STM32F4XX bkp driver
+//#include "stm32f4xx_bkp.h" # There is no STM32F4XX bkp driver, BKP registers are part of RTC
 //#include "stm32f4xx_can.h"
 #include "stm32f4xx_crc.h"
 //#include "stm32f4xx_dac.h"
