@@ -281,8 +281,8 @@ extern uint16_t NVMEM_SPARK_Reset_SysFlag;
 extern uint16_t FLASH_OTA_Update_SysFlag;
 extern uint16_t Factory_Reset_SysFlag;
 
-extern unsigned char wlan_rx_buffer[];
-extern unsigned char wlan_tx_buffer[];
+extern uint16_t wlan_rx_buffer[];
+extern uint16_t wlan_tx_buffer[];
 
 enum eSystemHealth {
   FIRST_RETRY = 1,

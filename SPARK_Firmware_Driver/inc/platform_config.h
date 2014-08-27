@@ -46,31 +46,31 @@
 
 /* Exported macro ------------------------------------------------------------*/
 
-//LEDs
+//LEDs (STM32F4 discovery is PD12-15)
 #define LEDn                           		4
-#define LED1_GPIO_PIN                    	GPIO_Pin_13
-#define LED1_GPIO_PORT                   	GPIOA
-#define LED1_GPIO_CLK                    	RCC_APB2Periph_GPIOA
-#define LED2_GPIO_PIN                   	GPIO_Pin_8
-#define LED2_GPIO_PORT                   	GPIOA
-#define LED2_GPIO_CLK                    	RCC_APB2Periph_GPIOA
-#define LED3_GPIO_PIN                   	GPIO_Pin_9
-#define LED3_GPIO_PORT                   	GPIOA
-#define LED3_GPIO_CLK                    	RCC_APB2Periph_GPIOA
-#define LED4_GPIO_PIN                    	GPIO_Pin_10
-#define LED4_GPIO_PORT                   	GPIOA
-#define LED4_GPIO_CLK                    	RCC_APB2Periph_GPIOA
+#define LED1_GPIO_PIN                    	GPIO_Pin_12
+#define LED1_GPIO_PORT                   	GPIOD
+#define LED1_GPIO_CLK                    	RCC_AHB1Periph_GPIOD
+#define LED2_GPIO_PIN                   	GPIO_Pin_13
+#define LED2_GPIO_PORT                   	GPIOD
+#define LED2_GPIO_CLK                    	RCC_AHB1Periph_GPIOD
+#define LED3_GPIO_PIN                   	GPIO_Pin_14
+#define LED3_GPIO_PORT                   	GPIOD
+#define LED3_GPIO_CLK                    	RCC_AHB1Periph_GPIOD
+#define LED4_GPIO_PIN                    	GPIO_Pin_15
+#define LED4_GPIO_PORT                   	GPIOD
+#define LED4_GPIO_CLK                    	RCC_AHB1Periph_GPIOD
 
-//Push Buttons
+//Push Buttons (User button is PA0 on STM32F4 discovery)
 #define BUTTONn                           	1
-#define BUTTON1_GPIO_PIN                 	GPIO_Pin_2
-#define BUTTON1_GPIO_PORT                	GPIOB
-#define BUTTON1_GPIO_CLK                 	RCC_APB2Periph_GPIOB
+#define BUTTON1_GPIO_PIN                 	GPIO_Pin_0
+#define BUTTON1_GPIO_PORT                	GPIOA
+#define BUTTON1_GPIO_CLK                 	RCC_AHB1Periph_GPIOA
 #define BUTTON1_GPIO_MODE					GPIO_Mode_IPU
 #define BUTTON1_PRESSED						0x00
 #define BUTTON1_EXTI_LINE                	EXTI_Line2
-#define BUTTON1_EXTI_PORT_SOURCE         	GPIO_PortSourceGPIOB
-#define BUTTON1_EXTI_PIN_SOURCE          	GPIO_PinSource2
+#define BUTTON1_EXTI_PORT_SOURCE         	GPIO_PortSourceGPIOA
+#define BUTTON1_EXTI_PIN_SOURCE          	GPIO_PinSource0
 #define BUTTON1_EXTI_IRQn                	EXTI2_IRQn
 #define	BUTTON1_EXTI_TRIGGER				EXTI_Trigger_Falling
 #define BUTTON2_GPIO_PIN                 	0
@@ -86,68 +86,71 @@
 
 //Header IOs
 #define Dn                           		8
-#define D0_GPIO_PIN                       	GPIO_Pin_7
-#define D0_GPIO_PORT                   		GPIOB
-#define D0_GPIO_CLK                    		RCC_APB2Periph_GPIOB
-#define D1_GPIO_PIN                       	GPIO_Pin_6
-#define D1_GPIO_PORT                   		GPIOB
-#define D1_GPIO_CLK                    		RCC_APB2Periph_GPIOB
-#define D2_GPIO_PIN                     	GPIO_Pin_5
-#define D2_GPIO_PORT                   		GPIOB
-#define D2_GPIO_CLK                    		RCC_APB2Periph_GPIOB
-#define D3_GPIO_PIN                      	GPIO_Pin_4
-#define D3_GPIO_PORT                   		GPIOB
-#define D3_GPIO_CLK                    		RCC_APB2Periph_GPIOB
-#define D4_GPIO_PIN                      	GPIO_Pin_3
-#define D4_GPIO_PORT                   		GPIOB
-#define D4_GPIO_CLK                    		RCC_APB2Periph_GPIOB
-#define D5_GPIO_PIN                     	GPIO_Pin_15
-#define D5_GPIO_PORT                   		GPIOA
-#define D5_GPIO_CLK                    		RCC_APB2Periph_GPIOA
-#define D6_GPIO_PIN                      	GPIO_Pin_14
-#define D6_GPIO_PORT                   		GPIOA
-#define D6_GPIO_CLK                    		RCC_APB2Periph_GPIOA
-#define D7_GPIO_PIN                      	GPIO_Pin_13
-#define D7_GPIO_PORT                   		GPIOA
-#define D7_GPIO_CLK                    		RCC_APB2Periph_GPIOA
+#define D0_GPIO_PIN                       GPIO_Pin_7
+#define D0_GPIO_PORT                   		GPIOE
+#define D0_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D1_GPIO_PIN                       GPIO_Pin_8
+#define D1_GPIO_PORT                   		GPIOE
+#define D1_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D2_GPIO_PIN                     	GPIO_Pin_9
+#define D2_GPIO_PORT                   		GPIOE
+#define D2_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D3_GPIO_PIN                      	GPIO_Pin_10
+#define D3_GPIO_PORT                   		GPIOE
+#define D3_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D4_GPIO_PIN                      	GPIO_Pin_11
+#define D4_GPIO_PORT                   		GPIOE
+#define D4_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D5_GPIO_PIN                     	GPIO_Pin_12
+#define D5_GPIO_PORT                   		GPIOE
+#define D5_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D6_GPIO_PIN                      	GPIO_Pin_13
+#define D6_GPIO_PORT                   		GPIOE
+#define D6_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
+#define D7_GPIO_PIN                      	GPIO_Pin_14
+#define D7_GPIO_PORT                   		GPIOE
+
+#define D7_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
 
 //CC3000 Interface pins
-#define CC3000_SPI							SPI2
-#define CC3000_SPI_CLK						RCC_APB1Periph_SPI2
-#define CC3000_SPI_CLK_CMD					RCC_APB1PeriphClockCmd
+#define CC3000_SPI							      SPI2
+#define CC3000_SPI_CLK						    RCC_APB1Periph_SPI2
+#define CC3000_SPI_CLK_CMD            RCC_APB1PeriphClockCmd
 #define CC3000_SPI_SCK_GPIO_PIN				GPIO_Pin_13					/* PB.13 */
 #define CC3000_SPI_SCK_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_SPI_SCK_GPIO_CLK				RCC_APB2Periph_GPIOB
+#define CC3000_SPI_SCK_GPIO_CLK				RCC_AHB1Periph_GPIOB
 #define CC3000_SPI_MISO_GPIO_PIN			GPIO_Pin_14					/* PB.14 */
 #define CC3000_SPI_MISO_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_SPI_MISO_GPIO_CLK			RCC_APB2Periph_GPIOB
+#define CC3000_SPI_MISO_GPIO_CLK			RCC_AHB1Periph_GPIOB
 #define CC3000_SPI_MOSI_GPIO_PIN			GPIO_Pin_15					/* PB.15 */
 #define CC3000_SPI_MOSI_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_SPI_MOSI_GPIO_CLK			RCC_APB2Periph_GPIOB
+#define CC3000_SPI_MOSI_GPIO_CLK			RCC_AHB1Periph_GPIOB
 #define CC3000_WIFI_CS_GPIO_PIN				GPIO_Pin_12					/* PB.12 */
 #define CC3000_WIFI_CS_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_WIFI_CS_GPIO_CLK				RCC_APB2Periph_GPIOB
+#define CC3000_WIFI_CS_GPIO_CLK				RCC_AHB1Periph_GPIOB
 #define CC3000_WIFI_EN_GPIO_PIN				GPIO_Pin_8					/* PB.08 */
 #define CC3000_WIFI_EN_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_WIFI_EN_GPIO_CLK				RCC_APB2Periph_GPIOB
+#define CC3000_WIFI_EN_GPIO_CLK				RCC_AHB1Periph_GPIOB
 #define CC3000_WIFI_INT_GPIO_PIN			GPIO_Pin_11					/* PB.11 */
 #define CC3000_WIFI_INT_GPIO_PORT			GPIOB						/* GPIOB */
-#define CC3000_WIFI_INT_GPIO_CLK			RCC_APB2Periph_GPIOB
+#define CC3000_WIFI_INT_GPIO_CLK			RCC_AHB1Periph_GPIOB
 
 #define CC3000_WIFI_INT_EXTI_LINE           EXTI_Line11
 #define CC3000_WIFI_INT_EXTI_PORT_SOURCE    GPIO_PortSourceGPIOB
 #define CC3000_WIFI_INT_EXTI_PIN_SOURCE     GPIO_PinSource11
 #define CC3000_WIFI_INT_EXTI_IRQn           EXTI15_10_IRQn
 
-#define CC3000_SPI_DMA_CLK                  RCC_AHBPeriph_DMA1
-#define CC3000_SPI_RX_DMA_CHANNEL           DMA1_Channel4
-#define CC3000_SPI_TX_DMA_CHANNEL           DMA1_Channel5
-#define CC3000_SPI_RX_DMA_TCFLAG            DMA1_FLAG_TC4
-#define CC3000_SPI_TX_DMA_TCFLAG            DMA1_FLAG_TC5
-#define CC3000_SPI_RX_DMA_IRQn           	DMA1_Channel4_IRQn
-#define CC3000_SPI_TX_DMA_IRQn           	DMA1_Channel5_IRQn
+#define CC3000_SPI_DMA_CLK                  RCC_AHB1Periph_DMA1
+#define CC3000_SPI_RX_DMA_CHANNEL           DMA_Channel_0
+#define CC3000_SPI_RX_DMA_STREAM            DMA1_Stream3
+#define CC3000_SPI_TX_DMA_CHANNEL           DMA_Channel_0
+#define CC3000_SPI_TX_DMA_STREAM            DMA_Stream4
+#define CC3000_SPI_RX_DMA_TCFLAG            DMA_FLAG_TCIF3
+#define CC3000_SPI_TX_DMA_TCFLAG            DMA_FLAG_TCIF4
+#define CC3000_SPI_RX_DMA_IRQn           	DMA1_Stream3_IRQn
+#define CC3000_SPI_TX_DMA_IRQn           	 DMA1_Stream4_IRQn
 
-#define CC3000_SPI_DR_BASE                  ((uint32_t)0x4000380C)	/* SPI2_BASE | 0x0C */
+#define CC3000_SPI_DR_BASE                  ((uint32_t)0x40003800)	/* SPI2_BASE | 0x0C */
 
 #define CC3000_SPI_BAUDRATE_PRESCALER		SPI_BaudRatePrescaler_4
 

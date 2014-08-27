@@ -807,12 +807,13 @@ void CC3000_WIFI_Init(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* CC3000_WIFI_CS_GPIO and CC3000_WIFI_EN_GPIO Peripheral clock enable */
-	RCC_APB2PeriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
+	RCC_AHB1eriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
 
 	/* Configure CC3000_WIFI pins: CS */
 	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_CS_GPIO_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_Init(CC3000_WIFI_CS_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Deselect CC3000 */
@@ -837,7 +838,7 @@ void CC3000_SPI_Init(void)
 	SPI_InitTypeDef SPI_InitStructure;
 
 	/* CC3000_SPI_SCK_GPIO, CC3000_SPI_MOSI_GPIO and CC3000_SPI_MISO_GPIO Peripheral clock enable */
-	RCC_APB2PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK | CC3000_SPI_MOSI_GPIO_CLK | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK | CC3000_SPI_MOSI_GPIO_CLK | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
 
 	/* CC3000_SPI Peripheral clock enable */
 	CC3000_SPI_CLK_CMD(CC3000_SPI_CLK, ENABLE);
@@ -877,37 +878,38 @@ void CC3000_SPI_Init(void)
  * @param  None
  * @retval None
  */
-void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint8_t* buffer, uint16_t NumData)
+void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint16_t* buffer, uint16_t NumData)
 {
 	DMA_InitTypeDef DMA_InitStructure;
 
-	RCC_AHBPeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
 
 	DMA_InitStructure.DMA_PeripheralBaseAddr = CC3000_SPI_DR_BASE;
 	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t) buffer;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
 
 	/* DMA used for Reception */
 	if (Direction == CC3000_DMA_RX)
 	{
-		DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+		DMA_InitStructure.DMA_Channel = CC3000_SPI_RX_DMA_CHANNEL
+		DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
 		DMA_InitStructure.DMA_BufferSize = NumData;
-		DMA_DeInit(CC3000_SPI_RX_DMA_CHANNEL );
-		DMA_Init(CC3000_SPI_RX_DMA_CHANNEL, &DMA_InitStructure);
+		DMA_DeInit(CC3000_SPI_RX_DMA_STREAM );
+		DMA_Init(CC3000_SPI_RX_DMA_STREAM, &DMA_InitStructure);
 	}
 	/* DMA used for Transmission */
 	else if (Direction == CC3000_DMA_TX)
 	{
-		DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+		DMA_InitStructure.DMA_Channel = CC3000_SPI_TX_DMA_CHANNEL
+		DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
 		DMA_InitStructure.DMA_BufferSize = NumData;
-		DMA_DeInit(CC3000_SPI_TX_DMA_CHANNEL );
-		DMA_Init(CC3000_SPI_TX_DMA_CHANNEL, &DMA_InitStructure);
+		DMA_DeInit(CC3000_SPI_TX_DMA_STREAM );
+		DMA_Init(CC3000_SPI_TX_DMA_STREAM, &DMA_InitStructure);
 	}
 }
 
@@ -917,7 +919,7 @@ void CC3000_SPI_DMA_Init(void)
 
 	/* Configure and enable SPI DMA TX Channel interrupt */
 	NVIC_InitStructure.NVIC_IRQChannel = CC3000_SPI_TX_DMA_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = DMA1_CHANNEL5_IRQ_PRIORITY;	//OLD: 0x00
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = DMA1_STREAM4_IRQ_PRIORITY;	//OLD: 0x00
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x00
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -925,11 +927,11 @@ void CC3000_SPI_DMA_Init(void)
 	CC3000_SPI_Init();
 
 	/* Configure DMA Peripheral but don't send data*/
-	CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) wlan_rx_buffer, 0);
-	CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) wlan_tx_buffer, 0);
+	CC3000_DMA_Config(CC3000_DMA_RX, (uint16_t*) wlan_rx_buffer, 0);
+	CC3000_DMA_Config(CC3000_DMA_TX, (uint16_t*) wlan_tx_buffer, 0);
 
 	/* Enable SPI DMA TX Channel Transfer Complete Interrupt */
-	DMA_ITConfig(CC3000_SPI_TX_DMA_CHANNEL, DMA_IT_TC, ENABLE);
+	DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
 
 	/* Enable SPI DMA request */
 	SPI_I2S_DMACmd(CC3000_SPI, SPI_I2S_DMAReq_Rx, ENABLE);
@@ -939,17 +941,17 @@ void CC3000_SPI_DMA_Init(void)
 	SPI_Cmd(CC3000_SPI, ENABLE);
 
 	/* Enable DMA RX Channel */
-	DMA_Cmd(CC3000_SPI_RX_DMA_CHANNEL, ENABLE);
+	DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, ENABLE);
 	/* Enable DMA TX Channel */
-	DMA_Cmd(CC3000_SPI_TX_DMA_CHANNEL, ENABLE);
+	DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
 }
 
 void CC3000_SPI_DMA_Channels(FunctionalState NewState)
 {
 	/* Enable/Disable DMA RX Channel */
-	DMA_Cmd(CC3000_SPI_RX_DMA_CHANNEL, NewState);
+	DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, NewState);
 	/* Enable/Disable DMA TX Channel */
-	DMA_Cmd(CC3000_SPI_TX_DMA_CHANNEL, NewState);
+	DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, NewState);
 }
 
 /* Select CC3000: ChipSelect pin low */
@@ -980,12 +982,13 @@ void CC3000_Interrupt_Enable(void)
 	EXTI_InitTypeDef EXTI_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* CC3000_WIFI_INT_GPIO and AFIO Peripheral clock enable */
-	RCC_APB2PeriphClockCmd(CC3000_WIFI_INT_GPIO_CLK | RCC_APB2Periph_AFIO, ENABLE);
+	/* CC3000_WIFI_INT_GPIO clock enable */
+	RCC_AHB1PeriphClockCmd(CC3000_WIFI_INT_GPIO_CLK, ENABLE);
 
 	/* Configure CC3000_WIFI pins: Interrupt */
 	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_INT_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(CC3000_WIFI_INT_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Select the CC3000_WIFI_INT GPIO pin used as EXTI Line */
