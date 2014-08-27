@@ -181,7 +181,7 @@
 #define BUTTON_DEBOUNCE_INTERVAL			1000 / UI_TIMER_FREQUENCY
 
 //NVIC Priorities based on NVIC_PriorityGroup_4
-#define DMA1_CHANNEL5_IRQ_PRIORITY			0	//CC3000_SPI_TX_DMA Interrupt
+#define DMA1_STREAM4_IRQ_PRIORITY			0	//CC3000_SPI_TX_DMA Interrupt
 #define EXTI15_10_IRQ_PRIORITY				1	//CC3000_WIFI_INT_EXTI & User Interrupt
 #define USB_LP_IRQ_PRIORITY					2	//USB_LP_CAN1_RX0 Interrupt
 #define RTCALARM_IRQ_PRIORITY				3	//RTC Alarm Interrupt
