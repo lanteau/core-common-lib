@@ -155,21 +155,21 @@
 #define CC3000_SPI_BAUDRATE_PRESCALER		SPI_BaudRatePrescaler_4
 
 //SST25 FLASH Interface pins
-#define sFLASH_SPI							SPI2
-#define sFLASH_SPI_CLK						RCC_APB1Periph_SPI2
-#define sFLASH_SPI_CLK_CMD					RCC_APB1PeriphClockCmd
+#define sFLASH_SPI							      SPI2
+#define sFLASH_SPI_CLK						    RCC_APB1Periph_SPI2
+#define sFLASH_SPI_CLK_CMD            RCC_APB1PeriphClockCmd
 #define sFLASH_SPI_SCK_GPIO_PIN				GPIO_Pin_13					/* PB.13 */
 #define sFLASH_SPI_SCK_GPIO_PORT			GPIOB						/* GPIOB */
-#define sFLASH_SPI_SCK_GPIO_CLK				RCC_APB2Periph_GPIOB
+#define sFLASH_SPI_SCK_GPIO_CLK				RCC_AHB1Periph_GPIOB
 #define sFLASH_SPI_MISO_GPIO_PIN			GPIO_Pin_14					/* PB.14 */
 #define sFLASH_SPI_MISO_GPIO_PORT			GPIOB						/* GPIOB */
-#define sFLASH_SPI_MISO_GPIO_CLK			RCC_APB2Periph_GPIOB
+#define sFLASH_SPI_MISO_GPIO_CLK			RCC_AHB1Periph_GPIOB
 #define sFLASH_SPI_MOSI_GPIO_PIN			GPIO_Pin_15					/* PB.15 */
 #define sFLASH_SPI_MOSI_GPIO_PORT			GPIOB						/* GPIOB */
-#define sFLASH_SPI_MOSI_GPIO_CLK			RCC_APB2Periph_GPIOB
+#define sFLASH_SPI_MOSI_GPIO_CLK			RCC_AHB1Periph_GPIOB
 #define sFLASH_MEM_CS_GPIO_PIN				GPIO_Pin_9					/* PB.09 */
 #define sFLASH_MEM_CS_GPIO_PORT				GPIOB						/* GPIOB */
-#define sFLASH_MEM_CS_GPIO_CLK				RCC_APB2Periph_GPIOB
+#define sFLASH_MEM_CS_GPIO_CLK				RCC_AHB1Periph_GPIOB
 
 #define sFLASH_SPI_BAUDRATE_PRESCALER		SPI_BaudRatePrescaler_2
 
