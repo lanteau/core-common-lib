@@ -208,7 +208,7 @@ void CC3000_WIFI_Init(void);
 void CC3000_SPI_Init(void);
 void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint8_t* buffer, uint16_t NumData);
 void CC3000_SPI_DMA_Init(void);
-void CC3000_SPI_DMA_Channels(FunctionalState NewState);
+void CC3000_SPI_DMA_Streams(FunctionalState NewState);
 void CC3000_CS_LOW(void);
 void CC3000_CS_HIGH(void);
 
@@ -276,13 +276,13 @@ extern __IO uint8_t IWDG_SYSTEM_RESET;
 
 extern uint8_t LED_RGB_OVERRIDE;
 
-extern uint16_t CORE_FW_Version_SysFlag;
-extern uint16_t NVMEM_SPARK_Reset_SysFlag;
-extern uint16_t FLASH_OTA_Update_SysFlag;
-extern uint16_t Factory_Reset_SysFlag;
+extern uint32_t CORE_FW_Version_SysFlag;
+extern uint32_t NVMEM_SPARK_Reset_SysFlag;
+extern uint32_t FLASH_OTA_Update_SysFlag;
+extern uint32_t Factory_Reset_SysFlag;
 
-extern uint16_t wlan_rx_buffer[];
-extern uint16_t wlan_tx_buffer[];
+extern unsigned char wlan_rx_buffer[];
+extern unsigned char wlan_tx_buffer[];
 
 enum eSystemHealth {
   FIRST_RETRY = 1,

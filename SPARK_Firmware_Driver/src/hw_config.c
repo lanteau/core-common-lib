@@ -75,6 +75,7 @@ GPIO_TypeDef* BUTTON_GPIO_PORT[] = {BUTTON1_GPIO_PORT, BUTTON2_GPIO_PORT};
 const uint16_t BUTTON_GPIO_PIN[] = {BUTTON1_GPIO_PIN, BUTTON2_GPIO_PIN};
 const uint32_t BUTTON_GPIO_CLK[] = {BUTTON1_GPIO_CLK, BUTTON2_GPIO_CLK};
 GPIOMode_TypeDef BUTTON_GPIO_MODE[] = {BUTTON1_GPIO_MODE, BUTTON2_GPIO_MODE};
+GPIOPuPd_TypeDef BUTTON_GPIO_PUPD[] = {BUTTON1_GPIO_PUPD, BUTTON2_GPIO_PUPD};
 __IO uint16_t BUTTON_DEBOUNCED_TIME[] = {0, 0};
 
 const uint16_t BUTTON_EXTI_LINE[] = {BUTTON1_EXTI_LINE, BUTTON2_EXTI_LINE};
@@ -146,10 +147,10 @@ void Set_System(void)
 	PWR_BackupAccessCmd(ENABLE);
 
 	/* Should we execute System Standby mode */
-	if(RTC_ReadBackupRegister(BKP_DR9) == 0x0000A5A5)
+	if(RTC_ReadBackupRegister(RTC_BKP_DR9) == 0x0000A5A5)
 	{
 		/* Clear Standby mode system flag */
-		RTC_WriteBackupRegister(BKP_DR9, 0xFFFFFFFF);
+		RTC_WriteBackupRegister(RTC_BKP_DR9, 0xFFFFFFFF);
 
 		/* Request to enter STANDBY mode */
 		PWR_EnterSTANDBYMode();
@@ -164,7 +165,7 @@ void Set_System(void)
 	NVIC_Configuration();
 
     /* Enable AFIO clock */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+   // RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
 	/* Configure DIOs */
 	int Dx;
@@ -349,7 +350,7 @@ void RTC_Configuration(void)
 void Enter_STANDBY_Mode(void)
 {
 	/* Execute Standby mode on next system reset */
-	RTC_WriteBackupRegister(BKP_DR9, 0x0000A5A5);
+	RTC_WriteBackupRegister(RTC_BKP_DR9, 0x0000A5A5);
 
 	/* Reset System */
 	NVIC_SystemReset();
@@ -386,11 +387,12 @@ void DIO_Init(DIO_TypeDef Dx)
     GPIO_InitTypeDef  GPIO_InitStructure;
 
     /* Enable the GPIO_Dx Clock */
-    RCC_APB2PeriphClockCmd(DIO_GPIO_CLK[Dx], ENABLE);
+    RCC_AHB1PeriphClockCmd(DIO_GPIO_CLK[Dx], ENABLE);
 
     /* Configure the GPIO_Dx pin */
     GPIO_InitStructure.GPIO_Pin = DIO_GPIO_PIN[Dx];
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(DIO_GPIO_PORT[Dx], &GPIO_InitStructure);
 
@@ -424,10 +426,10 @@ void UI_Timer_Configure(void)
     /* Enable TIM1 clock */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
-    /* TIM1 Update Frequency = 72000000/72/10000 = 100Hz = 10ms */
-    /* TIM1_Prescaler: 72 */
+    /* TIM1 Update Frequency = 84000000/84/10000 = 100Hz = 10ms */
+    /* TIM1_Prescaler: 84 */
     /* TIM1_Autoreload: 9999 -> 100Hz = 10ms */
-    uint16_t TIM1_Prescaler = SystemCoreClock / 1000000;
+    uint16_t TIM1_Prescaler = 84;
     uint16_t TIM1_Autoreload = (1000000 / UI_TIMER_FREQUENCY) - 1;
 
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
@@ -479,7 +481,7 @@ void UI_Timer_Configure(void)
 
 void LED_SetRGBColor(uint32_t RGB_Color)
 {
-  lastRGBColor = RGB_Color;
+  lastRGBColor = RGB_Color;TIM_Clock_Division_CKD
 	LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
 	LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
 	LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
@@ -530,14 +532,20 @@ void LED_Init(Led_TypeDef Led)
     GPIO_InitTypeDef  GPIO_InitStructure;
 
     /* Enable the GPIO_LED Clock */
-    RCC_APB2PeriphClockCmd(LED_GPIO_CLK[Led], ENABLE);
+    RCC_AHB1PeriphClockCmd(LED_GPIO_CLK[Led], ENABLE);
 
     /* Configure the GPIO_LED pin as alternate function push-pull */
     GPIO_InitStructure.GPIO_Pin = LED_GPIO_PIN[Led];
     if(Led == LED_USER)
-    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    {
+    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    }
     else
-    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    {
+    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    }
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
     GPIO_Init(LED_GPIO_PORT[Led], &GPIO_InitStructure);
@@ -716,10 +724,11 @@ void BUTTON_Init(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
     NVIC_InitTypeDef NVIC_InitStructure;
 
     /* Enable the BUTTON Clock */
-    RCC_APB2PeriphClockCmd(BUTTON_GPIO_CLK[Button] | RCC_APB2Periph_AFIO, ENABLE);
+    RCC_AHB1PeriphClockCmd(BUTTON_GPIO_CLK[Button], ENABLE);
 
     /* Configure Button pin as input floating */
     GPIO_InitStructure.GPIO_Mode = BUTTON_GPIO_MODE[Button];
+    GPIO_InitStructure.GPIO_PuPd = BUTTON_GPIO_PUPD[Button]
     GPIO_InitStructure.GPIO_Pin = BUTTON_GPIO_PIN[Button];
     GPIO_Init(BUTTON_GPIO_PORT[Button], &GPIO_InitStructure);
 
@@ -888,8 +897,8 @@ void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint16_t* buffer, 
 	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t) buffer;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
 
@@ -946,7 +955,7 @@ void CC3000_SPI_DMA_Init(void)
 	DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
 }
 
-void CC3000_SPI_DMA_Channels(FunctionalState NewState)
+void CC3000_SPI_DMA_Streams(FunctionalState NewState)
 {
 	/* Enable/Disable DMA RX Channel */
 	DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, NewState);
@@ -1552,7 +1561,7 @@ void FLASH_End(void)
 	FLASH_OTA_Update_SysFlag = 0x00000005;
 	Save_SystemFlags();
 
-	RTC_WriteBackupRegister(BKP_DR10, 0x00000005);
+	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00000005);
 
     USB_Cable_Config(DISABLE);
 
@@ -1652,7 +1661,7 @@ void OTA_Flash_Reset(void)
 
 	FLASH_OTA_Update_SysFlag = 0x00005555;
 	Save_SystemFlags();
-	_WriteBackupRegister(BKP_DR10, 0x00005555);
+	_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
 
 	//Restore the OTA programmed application firmware from External Flash
 	FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
@@ -1687,7 +1696,7 @@ void Finish_Update(void)
 	FLASH_OTA_Update_SysFlag = 0x00005000;
 	Save_SystemFlags();
 
-	RTC_WriteBackupRegister(BKP_DR10, 0x00005000);
+	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005000);
 
     USB_Cable_Config(DISABLE);
 

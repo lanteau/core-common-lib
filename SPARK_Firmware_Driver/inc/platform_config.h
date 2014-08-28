@@ -62,30 +62,31 @@
 #define LED4_GPIO_CLK                    	RCC_AHB1Periph_GPIOD
 
 //Push Buttons (User button is PA0 on STM32F4 discovery)
-#define BUTTONn                           	1
+#define BUTTONn                           1
 #define BUTTON1_GPIO_PIN                 	GPIO_Pin_0
 #define BUTTON1_GPIO_PORT                	GPIOA
 #define BUTTON1_GPIO_CLK                 	RCC_AHB1Periph_GPIOA
-#define BUTTON1_GPIO_MODE					GPIO_Mode_IPU
-#define BUTTON1_PRESSED						0x00
-#define BUTTON1_EXTI_LINE                	EXTI_Line2
+#define BUTTON1_GPIO_MODE					        GPIO_Mode_IN
+#define BUTTON1_GPIO_PUPD                 GPIO_PuPd_UP
+#define BUTTON1_PRESSED						        0x00
+#define BUTTON1_EXTI_LINE                	EXTI_Line0
 #define BUTTON1_EXTI_PORT_SOURCE         	GPIO_PortSourceGPIOA
 #define BUTTON1_EXTI_PIN_SOURCE          	GPIO_PinSource0
-#define BUTTON1_EXTI_IRQn                	EXTI2_IRQn
-#define	BUTTON1_EXTI_TRIGGER				EXTI_Trigger_Falling
+#define BUTTON1_EXTI_IRQn                	EXTI0_IRQn
+#define	BUTTON1_EXTI_TRIGGER				      EXTI_Trigger_Falling
 #define BUTTON2_GPIO_PIN                 	0
 #define BUTTON2_GPIO_PORT               	0
 #define BUTTON2_GPIO_CLK                	0
-#define BUTTON2_GPIO_MODE					0
-#define BUTTON2_PRESSED						0
+#define BUTTON2_GPIO_MODE				         	0
+#define BUTTON2_PRESSED						        0
 #define BUTTON2_EXTI_LINE               	0
 #define BUTTON2_EXTI_PORT_SOURCE        	0
 #define BUTTON2_EXTI_PIN_SOURCE         	0
 #define BUTTON2_EXTI_IRQn               	0
-#define	BUTTON2_EXTI_TRIGGER				0
+#define	BUTTON2_EXTI_TRIGGER				      0
 
 //Header IOs
-#define Dn                           		8
+#define Dn                           		  8
 #define D0_GPIO_PIN                       GPIO_Pin_7
 #define D0_GPIO_PORT                   		GPIOE
 #define D0_GPIO_CLK                    		RCC_AHB1Periph_GPIOE
@@ -144,7 +145,7 @@
 #define CC3000_SPI_RX_DMA_CHANNEL           DMA_Channel_0
 #define CC3000_SPI_RX_DMA_STREAM            DMA1_Stream3
 #define CC3000_SPI_TX_DMA_CHANNEL           DMA_Channel_0
-#define CC3000_SPI_TX_DMA_STREAM            DMA_Stream4
+#define CC3000_SPI_TX_DMA_STREAM            DMA1_Stream4
 #define CC3000_SPI_RX_DMA_TCFLAG            DMA_FLAG_TCIF3
 #define CC3000_SPI_TX_DMA_TCFLAG            DMA_FLAG_TCIF4
 #define CC3000_SPI_RX_DMA_IRQn           	DMA1_Stream3_IRQn

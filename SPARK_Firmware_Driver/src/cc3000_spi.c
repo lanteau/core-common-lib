@@ -259,10 +259,10 @@ int SpiIO(eSPIOperation op, const uint8_t *ptrData, uint32_t ulDataSize, int wai
 	}
 
 	/* Enable DMA SPI Interrupt */
-	DMA_ITConfig(CC3000_SPI_TX_DMA_CHANNEL, DMA_IT_TC, ENABLE);
+	DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
 
-	/* Enable DMA Channels */
-	CC3000_SPI_DMA_Channels(ENABLE);
+	/* Enable DMA Streams */
+	CC3000_SPI_DMA_Streams(ENABLE);
 	return waitOnCompletion ? Still(current) : 0;
 
 }
@@ -357,8 +357,8 @@ void SPI_DMA_IntHandler(void)
 	unsigned long ucTxFinished, ucRxFinished;
 	unsigned short data_to_recv = 0;
 
-	ucTxFinished = DMA_GetFlagStatus(CC3000_SPI_TX_DMA_TCFLAG );
-	ucRxFinished = DMA_GetFlagStatus(CC3000_SPI_RX_DMA_TCFLAG );
+	ucTxFinished = DMA_GetFlagStatus(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG );
+	ucRxFinished = DMA_GetFlagStatus(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG );
 	switch(sSpiInformation.ulSpiState)
 	{
 	case eSPI_STATE_READ_IRQ:
@@ -366,7 +366,8 @@ void SPI_DMA_IntHandler(void)
           if (ucTxFinished && ucRxFinished)
           {
                   /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_TCFLAG | CC3000_SPI_RX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
                   sSpiInformation.ulSpiState = eSPI_STATE_READ_PROCEED;
 
@@ -400,7 +401,8 @@ void SPI_DMA_IntHandler(void)
           if (ucRxFinished)
           {
                   /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_TCFLAG | CC3000_SPI_RX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
                   SpiPauseSpi();
                   SetState(eSPI_STATE_IDLE, eDeAssert);
@@ -423,7 +425,8 @@ void SPI_DMA_IntHandler(void)
                   }
 
                   /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_TCFLAG | CC3000_SPI_RX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
                   if ( sSpiInformation.ulSpiState == eSPI_STATE_FIRST_WRITE)
                   {
