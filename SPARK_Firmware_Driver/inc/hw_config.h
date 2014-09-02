@@ -12,7 +12,7 @@
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation, either
   version 3 of the License, or (at your option) any later version.
-
+_WriteBackupRegister
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -97,11 +97,13 @@ typedef struct ServerAddress {
 
 /* Internal Flash memory address where various firmwares are located */
 #define USB_DFU_ADDRESS				((uint32_t)0x08000000)
-#define CORE_FW_ADDRESS				((uint32_t)0x08005000)
+#define CORE_FW_ADDRESS				((uint32_t)0x0800C000)
 /* Internal Flash memory address where the System Flags will be saved and loaded from  */
-#define SYSTEM_FLAGS_ADDRESS		((uint32_t)0x08004C00)
+#define SYSTEM_FLAGS_ADDRESS		((uint32_t)0x08008000)
+/* Internal Flash Sector where the System Flags will be saved and loaded */
+#define SYSTEM_FLAGS_SECTOR   FLASH_Sector_2
 /* Internal Flash end memory address */
-#define INTERNAL_FLASH_END_ADDRESS	((uint32_t)0x08020000)	//For 128KB Internal Flash
+#define INTERNAL_FLASH_END_ADDRESS	((uint32_t)0x080FFFFF)	//For 128KB Internal Flash
 /* Internal Flash page size */
 #define INTERNAL_FLASH_PAGE_SIZE	((uint16_t)0x400)
 
@@ -236,8 +238,8 @@ void Load_SystemFlags(void);
 void Save_SystemFlags(void);
 
 /* Internal Flash Write Protection routines */
-void FLASH_WriteProtection_Enable(uint32_t FLASH_Pages);
-void FLASH_WriteProtection_Disable(uint32_t FLASH_Pages);
+void FLASH_WriteProtection_Enable(uint32_t FLASH_Sectors);
+void FLASH_WriteProtection_Disable(uint32_t FLASH_Sectors);
 /* Internal Flash Backup to sFlash and Restore from sFlash Helper routines */
 void FLASH_Erase(void);
 void FLASH_Backup(uint32_t sFLASH_Address);
@@ -297,8 +299,8 @@ enum eSystemHealth {
   PRESERVE_APP,
 };
 
-#define SET_SYS_HEALTH(health) BKP_WriteBackupRegister(BKP_DR1, (health))
-#define GET_SYS_HEALTH() BKP_ReadBackupRegister(BKP_DR1)
+#define SET_SYS_HEALTH(health) RTC_WriteBackupRegister(RTC_BKP_DR1, (health))
+#define GET_SYS_HEALTH() RTC_ReadBackupRegister(RTC_BKP_DR1)
 extern uint16_t sys_health_cache;
 #define DECLARE_SYS_HEALTH(health)  do { if ((health) > sys_health_cache) {SET_SYS_HEALTH(sys_health_cache=(health));}} while(0)
 #define KICK_WDT() IWDG_ReloadCounter()

@@ -70,7 +70,7 @@
 #define BUTTON1_GPIO_PUPD                 GPIO_PuPd_UP
 #define BUTTON1_PRESSED						        0x00
 #define BUTTON1_EXTI_LINE                	EXTI_Line0
-#define BUTTON1_EXTI_PORT_SOURCE         	GPIO_PortSourceGPIOA
+#define BUTTON1_EXTI_PORT_SOURCE         	EXTI_PortSourceGPIOA
 #define BUTTON1_EXTI_PIN_SOURCE          	GPIO_PinSource0
 #define BUTTON1_EXTI_IRQn                	EXTI0_IRQn
 #define	BUTTON1_EXTI_TRIGGER				      EXTI_Trigger_Falling
@@ -78,6 +78,7 @@
 #define BUTTON2_GPIO_PORT               	0
 #define BUTTON2_GPIO_CLK                	0
 #define BUTTON2_GPIO_MODE				         	0
+#define BUTTON2_GPIO_PUPD                 0
 #define BUTTON2_PRESSED						        0
 #define BUTTON2_EXTI_LINE               	0
 #define BUTTON2_EXTI_PORT_SOURCE        	0
@@ -137,7 +138,7 @@
 #define CC3000_WIFI_INT_GPIO_CLK			RCC_AHB1Periph_GPIOB
 
 #define CC3000_WIFI_INT_EXTI_LINE           EXTI_Line11
-#define CC3000_WIFI_INT_EXTI_PORT_SOURCE    GPIO_PortSourceGPIOB
+#define CC3000_WIFI_INT_EXTI_PORT_SOURCE    EXTI_PortSourceGPIOB
 #define CC3000_WIFI_INT_EXTI_PIN_SOURCE     GPIO_PinSource11
 #define CC3000_WIFI_INT_EXTI_IRQn           EXTI15_10_IRQn
 
@@ -174,9 +175,9 @@
 
 #define sFLASH_SPI_BAUDRATE_PRESCALER		SPI_BaudRatePrescaler_2
 
-#define USB_DISCONNECT_GPIO_PIN           	GPIO_Pin_10
-#define USB_DISCONNECT_GPIO_PORT       		GPIOB
-#define USB_DISCONNECT_GPIO_CLK		  		RCC_APB2Periph_GPIOB
+#define USB_DISCONNECT_GPIO_PIN       GPIO_Pin_10
+#define USB_DISCONNECT_GPIO_PORT      GPIOB
+#define USB_DISCONNECT_GPIO_CLK		  	RCC_AHB1Periph_GPIOB
 
 #define UI_TIMER_FREQUENCY					100							/* 100Hz -> 10ms */
 #define BUTTON_DEBOUNCE_INTERVAL			1000 / UI_TIMER_FREQUENCY

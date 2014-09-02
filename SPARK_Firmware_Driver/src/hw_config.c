@@ -91,7 +91,7 @@ uint32_t OTA_FLASHED_Status_SysFlag = 0xFFFFFFFF;
 uint32_t Factory_Reset_SysFlag = 0xFFFFFFFF;
 
 uint32_t WRPR_Value = 0xFFFFFFFF;
-uint32_t Flash_Pages_Protected = 0x0;
+uint32_t Flash_Sectors_Protected = 0x0;
 uint32_t Internal_Flash_Address = 0;
 uint32_t External_Flash_Address = 0;
 uint32_t Internal_Flash_Data = 0;
@@ -271,6 +271,8 @@ void RTC_Configuration(void)
 {
 	EXTI_InitTypeDef EXTI_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
+	RTC_AlarmTypeDef RTCAlarm_InitStructure;
+
 
 	/* Configure EXTI Line17(RTC Alarm) to generate an interrupt on rising edge */
 	EXTI_ClearITPendingBit(EXTI_Line17);
@@ -280,19 +282,30 @@ void RTC_Configuration(void)
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 
-	/* Enable the RTC Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTC_IRQ_PRIORITY;			//OLD: 0x01
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x01
+	/* Configure EXTI Line22(RTC WakeUp) to generate an interrupt on rising edge */
+	EXTI_ClearITPendingBit(EXTI_Line22);
+	EXTI_InitStructure.EXTI_Line = EXTI_Line22;
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+	EXTI_Init(&EXTI_InitStructure);
+
+
+	/* Enable the RTC Wakeup Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = RTC_WKUP_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTC_IRQ_PRIORITY;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
 	/* Enable the RTC Alarm Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = RTCAlarm_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannel = RTC_Alarm_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTCALARM_IRQ_PRIORITY;		//OLD: 0x01
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x02
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
+
+	// TODO: Configure RTCAlarm_InitStructure
 
 	/* Check if the StandBy flag is set */
 	if(PWR_GetFlagStatus(PWR_FLAG_SB) != RESET)
@@ -330,21 +343,15 @@ void RTC_Configuration(void)
 		/* Wait for RTC registers synchronization */
 		RTC_WaitForSynchro();
 
-		/* Wait until last write operation on RTC registers has finished */
-		RTC_WaitForLastTask();
+		/* Configure the RTC WakeUp Clock source: CK_SPRE (1Hz) */
+		RTC_WakeUpClockConfig(RTC_WakeUpClock_CK_SPRE_16bits);
+		RTC_SetWakeUpCounter(0x0);
 
-		/* Set RTC prescaler: set RTC period to 1sec */
-		RTC_SetPrescaler(32767); /* RTC period = RTCCLK/RTC_PR = (32.768 KHz)/(32767+1) */
+		// TODO: Configure RTC_AlarmA
 
-		/* Wait until last write operation on RTC registers has finished */
-		RTC_WaitForLastTask();
+		/* Enable the RTC Wakeup and RTC AlarmA interrupt */
+		RTC_ITConfig(RTC_IT_WUT | RTC_IT_ALRA, ENABLE);
 	}
-
-	/* Enable the RTC Second and RTC Alarm interrupt */
-	RTC_ITConfig(RTC_IT_SEC | RTC_IT_ALR, ENABLE);
-
-	/* Wait until last write operation on RTC registers has finished */
-	RTC_WaitForLastTask();
 }
 
 void Enter_STANDBY_Mode(void)
@@ -411,9 +418,9 @@ DIO_Error_TypeDef DIO_SetState(DIO_TypeDef Dx, DIO_State_TypeDef State)
 	if(Dx < 0 || Dx > Dn)
 		return FAIL;
 	else if(State == HIGH)
-		DIO_GPIO_PORT[Dx]->BSRR = DIO_GPIO_PIN[Dx];
+		DIO_GPIO_PORT[Dx]->BSRRL = DIO_GPIO_PIN[Dx];
 	else if(State == LOW)
-		DIO_GPIO_PORT[Dx]->BRR = DIO_GPIO_PIN[Dx];
+		DIO_GPIO_PORT[Dx]->BSRRH = DIO_GPIO_PIN[Dx];
 
 	return OK;
 }
@@ -481,7 +488,7 @@ void UI_Timer_Configure(void)
 
 void LED_SetRGBColor(uint32_t RGB_Color)
 {
-  lastRGBColor = RGB_Color;TIM_Clock_Division_CKD
+  lastRGBColor = RGB_Color;
 	LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
 	LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
 	LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
@@ -563,7 +570,7 @@ void LED_On(Led_TypeDef Led)
 	switch(Led)
 	{
 	case LED_USER:
-		LED_GPIO_PORT[Led]->BSRR = LED_GPIO_PIN[Led];
+		LED_GPIO_PORT[Led]->BSRRL = LED_GPIO_PIN[Led];
 		break;
 
 	case LED_RGB:	//LED_SetRGBColor() should be called first for this Case
@@ -600,7 +607,7 @@ void LED_Off(Led_TypeDef Led)
 	switch(Led)
 	{
 	case LED_USER:
-		LED_GPIO_PORT[Led]->BRR = LED_GPIO_PIN[Led];
+		LED_GPIO_PORT[Led]->BSRRH = LED_GPIO_PIN[Led];
 		break;
 
 	case LED_RGB:
@@ -728,7 +735,7 @@ void BUTTON_Init(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
 
     /* Configure Button pin as input floating */
     GPIO_InitStructure.GPIO_Mode = BUTTON_GPIO_MODE[Button];
-    GPIO_InitStructure.GPIO_PuPd = BUTTON_GPIO_PUPD[Button]
+    GPIO_InitStructure.GPIO_PuPd = BUTTON_GPIO_PUPD[Button];
     GPIO_InitStructure.GPIO_Pin = BUTTON_GPIO_PIN[Button];
     GPIO_Init(BUTTON_GPIO_PORT[Button], &GPIO_InitStructure);
 
@@ -761,10 +768,10 @@ void BUTTON_EXTI_Config(Button_TypeDef Button, FunctionalState NewState)
 {
     EXTI_InitTypeDef EXTI_InitStructure;
 
-	/* Connect Button EXTI Line to Button GPIO Pin */
-    GPIO_EXTILineConfig(BUTTON_GPIO_PORT_SOURCE[Button], BUTTON_GPIO_PIN_SOURCE[Button]);
+    /* Connect EXTI Line to appropriate GPIO Pin */
+ 	SYSCFG_EXTILineConfig(BUTTON_GPIO_PORT_SOURCE[Button], BUTTON_GPIO_PIN_SOURCE[Button]);
 
-	/* Clear the EXTI line pending flag */
+	/* Clear the EXTI line pending flag */	
 	EXTI_ClearFlag(BUTTON_EXTI_LINE[Button]);
 
     /* Configure Button EXTI line */
@@ -816,7 +823,7 @@ void CC3000_WIFI_Init(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* CC3000_WIFI_CS_GPIO and CC3000_WIFI_EN_GPIO Peripheral clock enable */
-	RCC_AHB1eriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
 
 	/* Configure CC3000_WIFI pins: CS */
 	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_CS_GPIO_PIN;
@@ -855,7 +862,9 @@ void CC3000_SPI_Init(void)
 	/* Configure CC3000_SPI pins: SCK */
 	GPIO_InitStructure.GPIO_Pin = CC3000_SPI_SCK_GPIO_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(CC3000_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Configure CC3000_SPI pins: MOSI */
@@ -864,7 +873,8 @@ void CC3000_SPI_Init(void)
 
 	/* Configure CC3000_SPI pins: MISO */
 	GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MISO_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(CC3000_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
 	/* CC3000_SPI Config */
@@ -887,14 +897,14 @@ void CC3000_SPI_Init(void)
  * @param  None
  * @retval None
  */
-void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint16_t* buffer, uint16_t NumData)
+void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint8_t* buffer, uint16_t NumData)
 {
 	DMA_InitTypeDef DMA_InitStructure;
 
 	RCC_AHB1PeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
 
 	DMA_InitStructure.DMA_PeripheralBaseAddr = CC3000_SPI_DR_BASE;
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t) buffer;
+	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -905,7 +915,7 @@ void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint16_t* buffer, 
 	/* DMA used for Reception */
 	if (Direction == CC3000_DMA_RX)
 	{
-		DMA_InitStructure.DMA_Channel = CC3000_SPI_RX_DMA_CHANNEL
+		DMA_InitStructure.DMA_Channel = CC3000_SPI_RX_DMA_CHANNEL;
 		DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
 		DMA_InitStructure.DMA_BufferSize = NumData;
 		DMA_DeInit(CC3000_SPI_RX_DMA_STREAM );
@@ -914,7 +924,7 @@ void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint16_t* buffer, 
 	/* DMA used for Transmission */
 	else if (Direction == CC3000_DMA_TX)
 	{
-		DMA_InitStructure.DMA_Channel = CC3000_SPI_TX_DMA_CHANNEL
+		DMA_InitStructure.DMA_Channel = CC3000_SPI_TX_DMA_CHANNEL;
 		DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
 		DMA_InitStructure.DMA_BufferSize = NumData;
 		DMA_DeInit(CC3000_SPI_TX_DMA_STREAM );
@@ -1001,7 +1011,7 @@ void CC3000_Interrupt_Enable(void)
 	GPIO_Init(CC3000_WIFI_INT_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Select the CC3000_WIFI_INT GPIO pin used as EXTI Line */
-	GPIO_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE );
+	SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE);
 
 	/* Clear the EXTI line pending flag */
 	EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE );
@@ -1070,7 +1080,8 @@ void sFLASH_SPI_DeInit(void)
 
 	/* Configure sFLASH_SPI pins: SCK */
 	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Configure sFLASH_SPI pins: MISO */
@@ -1098,7 +1109,7 @@ void sFLASH_SPI_Init(void)
 
 	/* sFLASH_MEM_CS_GPIO, sFLASH_SPI_MOSI_GPIO, sFLASH_SPI_MISO_GPIO
 	   and sFLASH_SPI_SCK_GPIO Periph clock enable */
-	RCC_APB2PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK | sFLASH_SPI_MOSI_GPIO_CLK | sFLASH_SPI_MISO_GPIO_CLK |
+	RCC_AHB1PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK | sFLASH_SPI_MOSI_GPIO_CLK | sFLASH_SPI_MISO_GPIO_CLK |
 						 sFLASH_SPI_SCK_GPIO_CLK, ENABLE);
 
 	/* sFLASH_SPI Periph clock enable */
@@ -1107,7 +1118,8 @@ void sFLASH_SPI_Init(void)
 	/* Configure sFLASH_SPI pins: SCK */
 	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Configure sFLASH_SPI pins: MOSI */
@@ -1116,13 +1128,15 @@ void sFLASH_SPI_Init(void)
 
 	/* Configure sFLASH_SPI pins: MISO */
 	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
 	/* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
 	GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 
 	/*!< Deselect the FLASH: Chip Select high */
@@ -1174,12 +1188,13 @@ void USB_Disconnect_Config(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* Enable USB_DISCONNECT GPIO clock */
-	RCC_APB2PeriphClockCmd(USB_DISCONNECT_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(USB_DISCONNECT_GPIO_CLK, ENABLE);
 
 	/* USB_DISCONNECT_GPIO_PIN used as USB pull-up */
 	GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_GPIO_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 	GPIO_Init(USB_DISCONNECT_GPIO_PORT, &GPIO_InitStructure);
 }
 
@@ -1191,11 +1206,11 @@ void USB_Disconnect_Config(void)
 *******************************************************************************/
 void Set_USBClock(void)
 {
-	/* Select USBCLK source */
-	RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
+	// /* Select USBCLK source */
+	// RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
 
-	/* Enable the USB clock */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
+	// /* Enable the USB clock */
+	// RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
 }
 
 /*******************************************************************************
@@ -1240,14 +1255,14 @@ void Leave_LowPowerMode(void)
 *******************************************************************************/
 void USB_Interrupts_Config(void)
 {
-	NVIC_InitTypeDef NVIC_InitStructure;
+	// NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* Enable the USB interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_LP_IRQ_PRIORITY;			//OLD: 0x01
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x00
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+	// /* Enable the USB interrupt */
+	// NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
+	// NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_LP_IRQ_PRIORITY;			//OLD: 0x01
+	// NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x00
+	// NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	// NVIC_Init(&NVIC_InitStructure);
 }
 
 /*******************************************************************************
@@ -1276,19 +1291,19 @@ void Load_SystemFlags(void)
 		return;
 
 	CORE_FW_Version_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 2;
+	Address += 4;
 
 	NVMEM_SPARK_Reset_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 2;
+	Address += 4;
 
 	FLASH_OTA_Update_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 2;
+	Address += 4;
 
 	OTA_FLASHED_Status_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 2;
+	Address += 4;
 
 	Factory_Reset_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 2;
+	Address += 4;
 }
 
 void Save_SystemFlags(void)
@@ -1303,95 +1318,91 @@ void Save_SystemFlags(void)
 	FLASH_Unlock();
 
 	/* Clear All pending flags */
-	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
+		| FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
 
 	/* Erase the Internal Flash pages */
-	FLASHStatus = FLASH_ErasePage(SYSTEM_FLAGS_ADDRESS);
+	FLASHStatus = FLASH_EraseSector(SYSTEM_FLAGS_SECTOR, VoltageRange_3);
 	while(FLASHStatus != FLASH_COMPLETE);
 
 	/* Program CORE_FW_Version_SysFlag */
-	FLASHStatus = FLASH_ProgramHalfWord(Address, CORE_FW_Version_SysFlag);
+	FLASHStatus = FLASH_ProgramWord(Address, CORE_FW_Version_SysFlag);
 	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 2;
+	Address += 4;
 
 	/* Program NVMEM_SPARK_Reset_SysFlag */
-	FLASHStatus = FLASH_ProgramHalfWord(Address, NVMEM_SPARK_Reset_SysFlag);
+	FLASHStatus = FLASH_ProgramWord(Address, NVMEM_SPARK_Reset_SysFlag);
 	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 2;
+	Address += 4;
 
 	/* Program FLASH_OTA_Update_SysFlag */
-	FLASHStatus = FLASH_ProgramHalfWord(Address, FLASH_OTA_Update_SysFlag);
+	FLASHStatus = FLASH_ProgramWord(Address, FLASH_OTA_Update_SysFlag);
 	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 2;
+	Address += 4;
 
 	/* Program OTA_FLASHED_Status_SysFlag */
-	FLASHStatus = FLASH_ProgramHalfWord(Address, OTA_FLASHED_Status_SysFlag);
+	FLASHStatus = FLASH_ProgramWord(Address, OTA_FLASHED_Status_SysFlag);
 	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 2;
+	Address += 4;
 
 	/* Program Factory_Reset_SysFlag */
-	FLASHStatus = FLASH_ProgramHalfWord(Address, Factory_Reset_SysFlag);
+	FLASHStatus = FLASH_ProgramWord(Address, Factory_Reset_SysFlag);
 	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 2;
+	Address += 4;
 
 	/* Locks the FLASH Program Erase Controller */
 	FLASH_Lock();
 }
 
-void FLASH_WriteProtection_Enable(uint32_t FLASH_Pages)
+void FLASH_WriteProtection_Enable(uint32_t FLASH_Sectors)
 {
+	/* Enable the FLASH option control register access */
+	FLASH_OB_Unlock();
+
 	/* Get pages write protection status */
-	WRPR_Value = FLASH_GetWriteProtectionOptionByte();
+	WRPR_Value = FLASH_OB_GetWRP();
 
 	/* Check if desired pages are not yet write protected */
-	if(((~WRPR_Value) & FLASH_Pages ) != FLASH_Pages)
+	if(((~WRPR_Value) & FLASH_Sectors ) != FLASH_Sectors)
 	{
 		/* Get current write protected pages and the new pages to be protected */
-		Flash_Pages_Protected =  (~WRPR_Value) | FLASH_Pages;
-
-		/* Unlock the Flash Program Erase controller */
-		FLASH_Unlock();
+		Flash_Sectors_Protected =  (~WRPR_Value) | FLASH_Sectors;
 
 		/* Erase all the option Bytes because if a program operation is
 	      performed on a protected page, the Flash memory returns a
 	      protection error */
-		FLASHStatus = FLASH_EraseOptionBytes();
+		//FLASHStatus = FLASH_EraseOptionBytes();
 
 		/* Enable the pages write protection */
-		FLASHStatus = FLASH_EnableWriteProtection(Flash_Pages_Protected);
+		FLASH_OB_WRPConfig(Flash_Sectors_Protected, ENABLE);
+
+		/* Launch the Option Bytes programming process. */
+		FLASH_OB_Launch();
 
 		/* Generate System Reset to load the new option byte values */
-		NVIC_SystemReset();
+		//NVIC_SystemReset();
 	}
+
+	/* Disable the FLASH option control register access */
+	FLASH_OB_Lock();
 }
 
-void FLASH_WriteProtection_Disable(uint32_t FLASH_Pages)
+void FLASH_WriteProtection_Disable(uint32_t FLASH_Sectors)
 {
-	/* Get pages write protection status */
-	WRPR_Value = FLASH_GetWriteProtectionOptionByte();
+	/* Enable the FLASH option control register access */
+	FLASH_OB_Unlock();
 
-	/* Check if desired pages are already write protected */
-	if((WRPR_Value | (~FLASH_Pages)) != 0xFFFFFFFF)
-	{
-		/* Get pages already write protected */
-		Flash_Pages_Protected = ~(WRPR_Value | FLASH_Pages);
+	/* Enable the pages write protection */
+	FLASH_OB_WRPConfig(FLASH_Sectors, DISABLE);
 
-		/* Unlock the Flash Program Erase controller */
-		FLASH_Unlock();
+	/* Launch the Option Bytes programming process. */
+	FLASH_OB_Launch();
 
-		/* Erase all the option Bytes */
-		FLASHStatus = FLASH_EraseOptionBytes();
+	/* Disable the FLASH option control register access */
+	FLASH_OB_Lock();
 
-		/* Check if there is write protected pages */
-		if(Flash_Pages_Protected != 0x0)
-		{
-			/* Restore write protected pages */
-			FLASHStatus = FLASH_EnableWriteProtection(Flash_Pages_Protected);
-		}
-
-		/* Generate System Reset to load the new option byte values */
-		NVIC_SystemReset();
-	}
+	/* Generate System Reset to load the new option byte values */
+	//NVIC_SystemReset();
 }
 
 void FLASH_Erase(void)
@@ -1401,17 +1412,21 @@ void FLASH_Erase(void)
 	/* Unlock the Flash Program Erase Controller */
 	FLASH_Unlock();
 
-	/* Define the number of Internal Flash pages to be erased */
-	NbrOfPage = (INTERNAL_FLASH_END_ADDRESS - CORE_FW_ADDRESS) / INTERNAL_FLASH_PAGE_SIZE;
-
 	/* Clear All pending flags */
-	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
+		| FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
 
-	/* Erase the Internal Flash pages */
-	for (EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++)
-	{
-		FLASHStatus = FLASH_ErasePage(CORE_FW_ADDRESS + (INTERNAL_FLASH_PAGE_SIZE * EraseCounter));
-	}
+	/* TODO: Come up with a cleaner method here... */
+	/* Erase the Internal Flash (FW is sectors 3-11) */
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_3, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_4, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_5, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_6, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_7, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_8, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_9, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_10, VoltageRange_3);
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_11, VoltageRange_3);
 
 	/* Locks the FLASH Program Erase Controller */
 	FLASH_Lock();
@@ -1457,6 +1472,7 @@ void FLASH_Backup(uint32_t sFLASH_Address)
 #endif
 }
 
+/* TODO: This function needs to be updated for STM32F4 flash architecture */
 void FLASH_Restore(uint32_t sFLASH_Address)
 {
 #ifdef SPARK_SFLASH_ENABLE
@@ -1661,7 +1677,7 @@ void OTA_Flash_Reset(void)
 
 	FLASH_OTA_Update_SysFlag = 0x00005555;
 	Save_SystemFlags();
-	_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
+	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
 
 	//Restore the OTA programmed application firmware from External Flash
 	FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
