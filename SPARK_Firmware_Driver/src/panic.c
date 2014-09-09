@@ -36,38 +36,38 @@ void panic_(ePanicCode code)
         __disable_irq();
         // Flush any serial message to help the poor bugger debug this;
         flash_codes_t pcd = flash_codes[code];
-        LED_SetRGBColor(RGB_COLOR_RED);
-        LED_On(LED_RGB);
+        //LED_SetRGBColor(RGB_COLOR_RED);
+        LED_On(pcd.led);
         uint16_t c;
         int loops = 2;
         if (debug_output_)(debug_output_("!"));
-        LED_Off(LED_RGB);
+        LED_Off(pcd.led);
         while(loops) {
                 // preamble
             KICK_WDT();
             for (c = 3; c; c--) {
-                LED_SetRGBColor(pcd.led);
-                LED_On(LED_RGB);
+               //LED_SetRGBColor(pcd.led);
+                LED_On(pcd.led);
                 Delay_Microsecond(MS2u(150));
-                LED_Off(LED_RGB);
+                LED_Off(pcd.led);
                 Delay_Microsecond(MS2u(100));
             }
 
             Delay_Microsecond(MS2u(100));
             for (c = 3; c; c--) {
-                LED_SetRGBColor(pcd.led);
-                LED_On(LED_RGB);
+                //LED_SetRGBColor(pcd.led);
+                LED_On(pcd.led);
                 Delay_Microsecond(MS2u(300));
-                LED_Off(LED_RGB);
+                LED_Off(pcd.led);
                 Delay_Microsecond(MS2u(100));
             }
             Delay_Microsecond(MS2u(100));
 
             for (c = 3; c; c--) {
-                LED_SetRGBColor(pcd.led);
-                LED_On(LED_RGB);
+                //LED_SetRGBColor(pcd.led);
+                LED_On(pcd.led);
                 Delay_Microsecond(MS2u(150));
-                LED_Off(LED_RGB);
+                LED_Off(pcd.led);
                 Delay_Microsecond(MS2u(100));
             }
 
@@ -75,10 +75,10 @@ void panic_(ePanicCode code)
                 Delay_Microsecond(MS2u(900));
                 // play code
                 for (c = code; c; c--) {
-                    LED_SetRGBColor(pcd.led);
-                    LED_On(LED_RGB);
+                    //LED_SetRGBColor(pcd.led);
+                    LED_On(pcd.led);
                     Delay_Microsecond(MS2u(300));
-                    LED_Off(LED_RGB);
+                    LED_Off(pcd.led);
                     Delay_Microsecond(MS2u(300));
                 }
                 // pause

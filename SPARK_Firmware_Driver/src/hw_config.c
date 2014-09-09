@@ -25,8 +25,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hw_config.h"
-#include "usb_lib.h"
-#include "usb_pwr.h"
+//#include "usb_lib.h"
+//#include "usb_pwr.h"
 #include <string.h>
 #include "spi_bus.h"
 #include "debug.h"
@@ -39,7 +39,7 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-uint8_t USE_SYSTEM_FLAGS = 0;	//0, 1
+uint8_t USE_SYSTEM_FLAGS = 0;   //0, 1
 uint16_t sys_health_cache = 0; // Used by the SYS_HEALTH macros store new heath if higher
 
 volatile uint32_t TimingDelay;
@@ -50,17 +50,17 @@ volatile uint32_t TimingIWDGReload;
 __IO uint8_t IWDG_SYSTEM_RESET;
 
 GPIO_TypeDef* DIO_GPIO_PORT[] = {D0_GPIO_PORT, D1_GPIO_PORT, D2_GPIO_PORT, D3_GPIO_PORT,
-								D4_GPIO_PORT, D5_GPIO_PORT, D6_GPIO_PORT, D7_GPIO_PORT};
+                                D4_GPIO_PORT, D5_GPIO_PORT, D6_GPIO_PORT, D7_GPIO_PORT};
 const uint16_t DIO_GPIO_PIN[] = {D0_GPIO_PIN, D1_GPIO_PIN, D2_GPIO_PIN, D3_GPIO_PIN,
-								D4_GPIO_PIN, D5_GPIO_PIN, D6_GPIO_PIN, D7_GPIO_PIN};
+                                D4_GPIO_PIN, D5_GPIO_PIN, D6_GPIO_PIN, D7_GPIO_PIN};
 const uint32_t DIO_GPIO_CLK[] = {D0_GPIO_CLK, D1_GPIO_CLK, D2_GPIO_CLK, D3_GPIO_CLK,
-								D4_GPIO_CLK, D5_GPIO_CLK, D6_GPIO_CLK, D7_GPIO_CLK};
+                                D4_GPIO_CLK, D5_GPIO_CLK, D6_GPIO_CLK, D7_GPIO_CLK};
 
-GPIO_TypeDef* LED_GPIO_PORT[] = {LED1_GPIO_PORT, LED2_GPIO_PORT, LED3_GPIO_PORT, LED4_GPIO_PORT};
-const uint16_t LED_GPIO_PIN[] = {LED1_GPIO_PIN, LED2_GPIO_PIN, LED3_GPIO_PIN, LED4_GPIO_PIN};
-const uint32_t LED_GPIO_CLK[] = {LED1_GPIO_CLK, LED2_GPIO_CLK, LED3_GPIO_CLK, LED4_GPIO_CLK};
+GPIO_TypeDef* LED_GPIO_PORT[] = {LEDGREEN_GPIO_PORT, LEDORANGE_GPIO_PORT, LEDRED_GPIO_PORT, LEDBLUE_GPIO_PORT};
+const uint16_t LED_GPIO_PIN[] = {LEDGREEN_GPIO_PIN, LEDORANGE_GPIO_PIN, LEDRED_GPIO_PIN, LEDBLUE_GPIO_PIN};
+const uint32_t LED_GPIO_CLK[] = {LEDGREEN_GPIO_CLK, LEDORANGE_GPIO_CLK, LEDRED_GPIO_CLK, LEDBLUE_GPIO_CLK};
 __IO uint16_t LED_TIM_CCR[] = {0x0000, 0x0000, 0x0000, 0x0000};
-__IO uint16_t LED_TIM_CCR_SIGNAL[] = {0x0000, 0x0000, 0x0000, 0x0000};	//TIM CCR Signal Override
+__IO uint16_t LED_TIM_CCR_SIGNAL[] = {0x0000, 0x0000, 0x0000, 0x0000};  //TIM CCR Signal Override
 uint8_t LED_RGB_OVERRIDE = 0;
 uint8_t LED_RGB_BRIGHTNESS = 96;
 uint32_t lastSignalColor = 0;
@@ -120,10 +120,10 @@ __IO uint16_t sFLASH_SPI_CR;
 
 static void DWT_Init(void)
 {
-        DBGMCU->CR |= DBGMCU_SETTINGS;
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->CYCCNT = 0;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    DBGMCU->CR |= DBGMCU_SETTINGS;
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 
 /**
@@ -133,59 +133,59 @@ static void DWT_Init(void)
  */
 void Set_System(void)
 {
-	/*!< At this stage the microcontroller clock setting is already configured,
-	 this is done through SystemInit() function which is called from startup
-	 file (startup_stm32f10x_xx.S) before to branch to application main.
-	 To reconfigure the default setting of SystemInit() function, refer to
-	 system_stm32f10x.c file
-	 */
+    /*!< At this stage the microcontroller clock setting is already configured,
+     this is done through SystemInit() function which is called from startup
+     file (startup_stm32f10x_xx.S) before to branch to application main.
+     To reconfigure the default setting of SystemInit() function, refer to
+     system_stm32f10x.c file
+     */
 
-	/* Enable PWR and BKP clock */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
+    /* Enable PWR and BKP clock */
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
 
-	/* Enable write access to Backup domain */
-	PWR_BackupAccessCmd(ENABLE);
+    /* Enable write access to Backup domain */
+    PWR_BackupAccessCmd(ENABLE);
 
-	/* Should we execute System Standby mode */
-	if(RTC_ReadBackupRegister(RTC_BKP_DR9) == 0x0000A5A5)
-	{
-		/* Clear Standby mode system flag */
-		RTC_WriteBackupRegister(RTC_BKP_DR9, 0xFFFFFFFF);
+    /* Should we execute System Standby mode */
+    if(RTC_ReadBackupRegister(RTC_BKP_DR9) == 0x0000A5A5)
+    {
+        /* Clear Standby mode system flag */
+        RTC_WriteBackupRegister(RTC_BKP_DR9, 0xFFFFFFFF);
 
-		/* Request to enter STANDBY mode */
-		PWR_EnterSTANDBYMode();
+        /* Request to enter STANDBY mode */
+        PWR_EnterSTANDBYMode();
 
-		/* Following code will not be reached */
-		while(1);
-	}
+        /* Following code will not be reached */
+        while(1);
+    }
 
-	DWT_Init();
+    DWT_Init();
 
-	/* NVIC configuration */
-	NVIC_Configuration();
+    /* NVIC configuration */
+    NVIC_Configuration();
 
     /* Enable AFIO clock */
    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
-	/* Configure DIOs */
-	int Dx;
-	for(Dx = 0; Dx < Dn; ++Dx)
-	{
-		DIO_Init(Dx);
-	}
+    /* Configure DIOs */
+    int Dx;
+    for(Dx = 0; Dx < Dn; ++Dx)
+    {
+        DIO_Init(Dx);
+    }
 
-	/* Configure TIM1 for LED-PWM and BUTTON-DEBOUNCE usage */
-	UI_Timer_Configure();
+    /* Configure TIM1 for LED-PWM and BUTTON-DEBOUNCE usage */
+    UI_Timer_Configure();
 
-	/* Configure the LEDs and set the default states */
-	int LEDx;
-	for(LEDx = 0; LEDx < LEDn; ++LEDx)
-	{
-	    LED_Init(LEDx);
-	}
+    /* Configure the LEDs and set the default states */
+    int LEDx;
+    for(LEDx = 0; LEDx < LEDn; ++LEDx)
+    {
+        LED_Init(LEDx);
+    }
 
     /* Configure the Button */
-    BUTTON_Init(BUTTON1, BUTTON_MODE_EXTI);
+    BUTTON_Init(BUTTON1, BUTTON_MODE_GPIO);
 }
 
 /*******************************************************************************
@@ -197,13 +197,13 @@ void Set_System(void)
  *******************************************************************************/
 void NVIC_Configuration(void)
 {
-	/* Configure the NVIC Preemption Priority Bits */
-	/* 4 bits for pre-emption priority(0-15 PreemptionPriority) and 0 bits for subpriority(0 SubPriority) */
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+    /* Configure the NVIC Preemption Priority Bits */
+    /* 4 bits for pre-emption priority(0-15 PreemptionPriority) and 0 bits for subpriority(0 SubPriority) */
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
-	/* Configure the Priority Group to 2 bits */
-	/* 2 bits for pre-emption priority(0-3 PreemptionPriority) and 2 bits for subpriority(0-3 SubPriority) */
-	//OLD: NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+    /* Configure the Priority Group to 2 bits */
+    /* 2 bits for pre-emption priority(0-3 PreemptionPriority) and 2 bits for subpriority(0-3 SubPriority) */
+    //OLD: NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 }
 
 /*******************************************************************************
@@ -215,17 +215,17 @@ void NVIC_Configuration(void)
  *******************************************************************************/
 void SysTick_Configuration(void)
 {
-	/* Setup SysTick Timer for 1 msec interrupts */
-	if (SysTick_Config(SystemCoreClock / 1000))
-	{
-		/* Capture error */
-		while (1)
-		{
-		}
-	}
+    /* Setup SysTick Timer for 1 msec interrupts */
+    if (SysTick_Config(SystemCoreClock / 1000))
+    {
+        /* Capture error */
+        while (1)
+        {
+        }
+    }
 
-	/* Configure the SysTick Handler Priority: Preemption priority and subpriority */
-	NVIC_SetPriority(SysTick_IRQn, SYSTICK_IRQ_PRIORITY);	//OLD: NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x03, 0x00)
+    /* Configure the SysTick Handler Priority: Preemption priority and subpriority */
+    NVIC_SetPriority(SysTick_IRQn, SYSTICK_IRQ_PRIORITY);   //OLD: NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0x03, 0x00)
 }
 
 /*******************************************************************************
@@ -269,119 +269,119 @@ void Delay_Microsecond(uint32_t uSec)
 
 void RTC_Configuration(void)
 {
-	EXTI_InitTypeDef EXTI_InitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
-	RTC_AlarmTypeDef RTCAlarm_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+    RTC_AlarmTypeDef RTCAlarm_InitStructure;
 
 
-	/* Configure EXTI Line17(RTC Alarm) to generate an interrupt on rising edge */
-	EXTI_ClearITPendingBit(EXTI_Line17);
-	EXTI_InitStructure.EXTI_Line = EXTI_Line17;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
+    /* Configure EXTI Line17(RTC Alarm) to generate an interrupt on rising edge */
+    EXTI_ClearITPendingBit(EXTI_Line17);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line17;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
 
-	/* Configure EXTI Line22(RTC WakeUp) to generate an interrupt on rising edge */
-	EXTI_ClearITPendingBit(EXTI_Line22);
-	EXTI_InitStructure.EXTI_Line = EXTI_Line22;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
+    /* Configure EXTI Line22(RTC WakeUp) to generate an interrupt on rising edge */
+    EXTI_ClearITPendingBit(EXTI_Line22);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line22;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
 
 
-	/* Enable the RTC Wakeup Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = RTC_WKUP_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTC_IRQ_PRIORITY;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    /* Enable the RTC Wakeup Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = RTC_WKUP_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTC_IRQ_PRIORITY;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
-	/* Enable the RTC Alarm Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = RTC_Alarm_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTCALARM_IRQ_PRIORITY;		//OLD: 0x01
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x02
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    /* Enable the RTC Alarm Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = RTC_Alarm_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = RTCALARM_IRQ_PRIORITY;       //OLD: 0x01
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                               //OLD: 0x02
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
-	// TODO: Configure RTCAlarm_InitStructure
+    // TODO: Configure RTCAlarm_InitStructure
 
-	/* Check if the StandBy flag is set */
-	if(PWR_GetFlagStatus(PWR_FLAG_SB) != RESET)
-	{
-		/* System resumed from STANDBY mode */
+    /* Check if the StandBy flag is set */
+    if(PWR_GetFlagStatus(PWR_FLAG_SB) != RESET)
+    {
+        /* System resumed from STANDBY mode */
 
-		/* Clear StandBy flag */
-		PWR_ClearFlag(PWR_FLAG_SB);
+        /* Clear StandBy flag */
+        PWR_ClearFlag(PWR_FLAG_SB);
 
-		/* Wait for RTC APB registers synchronisation */
-		RTC_WaitForSynchro();
+        /* Wait for RTC APB registers synchronisation */
+        RTC_WaitForSynchro();
 
-		/* No need to configure the RTC as the RTC configuration(clock source, enable,
-	       prescaler,...) is kept after wake-up from STANDBY */
-	}
-	else
-	{
-		/* StandBy flag is not set */
+        /* No need to configure the RTC as the RTC configuration(clock source, enable,
+           prescaler,...) is kept after wake-up from STANDBY */
+    }
+    else
+    {
+        /* StandBy flag is not set */
 
-		/* Enable LSE */
-		RCC_LSEConfig(RCC_LSE_ON);
+        /* Enable LSE */
+        RCC_LSEConfig(RCC_LSE_ON);
 
-		/* Wait till LSE is ready */
-		while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET)
-		{
-			//Do nothing
-		}
+        /* Wait till LSE is ready */
+        while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET)
+        {
+            //Do nothing
+        }
 
-		/* Select LSE as RTC Clock Source */
-		RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);
+        /* Select LSE as RTC Clock Source */
+        RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);
 
-		/* Enable RTC Clock */
-		RCC_RTCCLKCmd(ENABLE);
+        /* Enable RTC Clock */
+        RCC_RTCCLKCmd(ENABLE);
 
-		/* Wait for RTC registers synchronization */
-		RTC_WaitForSynchro();
+        /* Wait for RTC registers synchronization */
+        RTC_WaitForSynchro();
 
-		/* Configure the RTC WakeUp Clock source: CK_SPRE (1Hz) */
-		RTC_WakeUpClockConfig(RTC_WakeUpClock_CK_SPRE_16bits);
-		RTC_SetWakeUpCounter(0x0);
+        /* Configure the RTC WakeUp Clock source: CK_SPRE (1Hz) */
+        RTC_WakeUpClockConfig(RTC_WakeUpClock_CK_SPRE_16bits);
+        RTC_SetWakeUpCounter(0x0);
 
-		// TODO: Configure RTC_AlarmA
+        // TODO: Configure RTC_AlarmA
 
-		/* Enable the RTC Wakeup and RTC AlarmA interrupt */
-		RTC_ITConfig(RTC_IT_WUT | RTC_IT_ALRA, ENABLE);
-	}
+        /* Enable the RTC Wakeup and RTC AlarmA interrupt */
+        RTC_ITConfig(RTC_IT_WUT | RTC_IT_ALRA, ENABLE);
+    }
 }
 
 void Enter_STANDBY_Mode(void)
 {
-	/* Execute Standby mode on next system reset */
-	RTC_WriteBackupRegister(RTC_BKP_DR9, 0x0000A5A5);
+    /* Execute Standby mode on next system reset */
+    RTC_WriteBackupRegister(RTC_BKP_DR9, 0x0000A5A5);
 
-	/* Reset System */
-	NVIC_SystemReset();
+    /* Reset System */
+    NVIC_SystemReset();
 }
 
 void IWDG_Reset_Enable(uint32_t msTimeout)
 {
-	/* Enable write access to IWDG_PR and IWDG_RLR registers */
-	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+    /* Enable write access to IWDG_PR and IWDG_RLR registers */
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 
-	/* IWDG counter clock: LSI/256 */
-	IWDG_SetPrescaler(IWDG_Prescaler_256);
+    /* IWDG counter clock: LSI/256 */
+    IWDG_SetPrescaler(IWDG_Prescaler_256);
 
         /* IWDG timeout may vary due to LSI frequency dispersion */
         msTimeout = ((msTimeout * 40) / 256); //Assuming LSI Frequency = 40000
         if (msTimeout > 0xfff) msTimeout = 0xfff;   // 26214.4
 
-	IWDG_SetReload((uint16_t)msTimeout);
+    IWDG_SetReload((uint16_t)msTimeout);
 
-	/* Reload IWDG counter */
-	IWDG_ReloadCounter();
+    /* Reload IWDG counter */
+    IWDG_ReloadCounter();
 
-	/* Enable IWDG (the LSI oscillator will be enabled by hardware) */
-	IWDG_Enable();
+    /* Enable IWDG (the LSI oscillator will be enabled by hardware) */
+    IWDG_Enable();
 }
 
 /**
@@ -415,14 +415,14 @@ void DIO_Init(DIO_TypeDef Dx)
   */
 DIO_Error_TypeDef DIO_SetState(DIO_TypeDef Dx, DIO_State_TypeDef State)
 {
-	if(Dx < 0 || Dx > Dn)
-		return FAIL;
-	else if(State == HIGH)
-		DIO_GPIO_PORT[Dx]->BSRRL = DIO_GPIO_PIN[Dx];
-	else if(State == LOW)
-		DIO_GPIO_PORT[Dx]->BSRRH = DIO_GPIO_PIN[Dx];
+    if(Dx < 0 || Dx > Dn)
+        return FAIL;
+    else if(State == HIGH)
+        DIO_GPIO_PORT[Dx]->BSRRL = DIO_GPIO_PIN[Dx];
+    else if(State == LOW)
+        DIO_GPIO_PORT[Dx]->BSRRH = DIO_GPIO_PIN[Dx];
 
-	return OK;
+    return OK;
 }
 
 void UI_Timer_Configure(void)
@@ -431,7 +431,7 @@ void UI_Timer_Configure(void)
     TIM_OCInitTypeDef TIM_OCInitStructure;
 
     /* Enable TIM1 clock */
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
     /* TIM1 Update Frequency = 84000000/84/10000 = 100Hz = 10ms */
     /* TIM1_Prescaler: 84 */
@@ -442,90 +442,90 @@ void UI_Timer_Configure(void)
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
 
     /* Time Base Configuration */
-	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-	TIM_TimeBaseStructure.TIM_Period = TIM1_Autoreload;
-	TIM_TimeBaseStructure.TIM_Prescaler = TIM1_Prescaler;
-	TIM_TimeBaseStructure.TIM_ClockDivision = 0x0000;
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
+    TIM_TimeBaseStructure.TIM_Period = TIM1_Autoreload;
+    TIM_TimeBaseStructure.TIM_Prescaler = TIM1_Prescaler;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0x0000;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
-	TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 
-	TIM_OCStructInit(&TIM_OCInitStructure);
+    TIM_OCStructInit(&TIM_OCInitStructure);
 
-	/* PWM1 Mode configuration: Channel 1, 2 and 3 */
-	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse = 0x0000;
-	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
-	TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
+    /* PWM1 Mode configuration: Channel 1, 2 and 3 */
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = 0x0000;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
+    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
 
-	TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-	TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Disable);
+    TIM_OC1Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Disable);
 
-	TIM_OC2Init(TIM1, &TIM_OCInitStructure);
-	TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Disable);
+    TIM_OC2Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Disable);
 
-	TIM_OC3Init(TIM1, &TIM_OCInitStructure);
-	TIM_OC3PreloadConfig(TIM1, TIM_OCPreload_Disable);
+    TIM_OC3Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC3PreloadConfig(TIM1, TIM_OCPreload_Disable);
 
-	/* Output Compare Timing Mode configuration: Channel 4 */
-	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
-	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse = 0x0000;
-	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+    /* Output Compare Timing Mode configuration: Channel 4 */
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = 0x0000;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 
-	TIM_OC4Init(TIM1, &TIM_OCInitStructure);
-	TIM_OC4PreloadConfig(TIM1, TIM_OCPreload_Disable);
+    TIM_OC4Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC4PreloadConfig(TIM1, TIM_OCPreload_Disable);
 
-	TIM_ARRPreloadConfig(TIM1, ENABLE);
+    TIM_ARRPreloadConfig(TIM1, ENABLE);
 
-	/* TIM1 enable counter */
-	TIM_Cmd(TIM1, ENABLE);
+    /* TIM1 enable counter */
+    TIM_Cmd(TIM1, ENABLE);
 
-	/* Main Output Enable */
-	TIM_CtrlPWMOutputs(TIM1, ENABLE);
+    /* Main Output Enable */
+    TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
-void LED_SetRGBColor(uint32_t RGB_Color)
-{
-  lastRGBColor = RGB_Color;
-	LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
-	LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
-	LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
-}
+// void LED_SetRGBColor(uint32_t RGB_Color)
+// {
+//   lastRGBColor = RGB_Color;
+//  LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
+//  LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
+//  LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
+// }
 
-void LED_SetSignalingColor(uint32_t RGB_Color)
-{
-  lastSignalColor = RGB_Color;
-	LED_TIM_CCR_SIGNAL[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
-	LED_TIM_CCR_SIGNAL[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
-	LED_TIM_CCR_SIGNAL[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
-}
+// void LED_SetSignalingColor(uint32_t RGB_Color)
+// {
+//   lastSignalColor = RGB_Color;
+//  LED_TIM_CCR_SIGNAL[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
+//  LED_TIM_CCR_SIGNAL[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
+//  LED_TIM_CCR_SIGNAL[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
+// }
 
-void LED_Signaling_Start(void)
-{
-	LED_RGB_OVERRIDE = 1;
+// void LED_Signaling_Start(void)
+// {
+//  LED_RGB_OVERRIDE = 1;
 
-	LED_Off(LED_RGB);
-}
+//  LED_Off(LED_RGB);
+// }
 
-void LED_Signaling_Stop(void)
-{
-	LED_RGB_OVERRIDE = 0;
+// void LED_Signaling_Stop(void)
+// {
+//  LED_RGB_OVERRIDE = 0;
 
-	LED_On(LED_RGB);
-}
+//  LED_On(LED_RGB);
+// }
 
-void LED_SetBrightness(uint8_t brightness)
-{
-  LED_RGB_BRIGHTNESS = brightness;
+// void LED_SetBrightness(uint8_t brightness)
+// {
+//   LED_RGB_BRIGHTNESS = brightness;
 
-  /* Recompute RGB scale using new value for brightness. */
-	if (LED_RGB_OVERRIDE)
-    LED_SetSignalingColor(lastSignalColor);
-  else
-    LED_SetRGBColor(lastRGBColor);
-}
+//   /* Recompute RGB scale using new value for brightness. */
+//  if (LED_RGB_OVERRIDE)
+//     LED_SetSignalingColor(lastSignalColor);
+//   else
+//     LED_SetRGBColor(lastRGBColor);
+// }
 
 /**
   * @brief  Configures LED GPIO.
@@ -543,15 +543,15 @@ void LED_Init(Led_TypeDef Led)
 
     /* Configure the GPIO_LED pin as alternate function push-pull */
     GPIO_InitStructure.GPIO_Pin = LED_GPIO_PIN[Led];
-    if(Led == LED_USER)
+    if(Led == LEDGREEN || Led == LEDORANGE || Led == LEDRED || Led == LEDBLUE)
     {
-    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     }
     else
     {
-    	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     }
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
@@ -567,32 +567,35 @@ void LED_Init(Led_TypeDef Led)
   */
 void LED_On(Led_TypeDef Led)
 {
-	switch(Led)
-	{
-	case LED_USER:
-		LED_GPIO_PORT[Led]->BSRRL = LED_GPIO_PIN[Led];
-		break;
+    switch(Led)
+    {
+    case LEDGREEN:
+    case LEDORANGE:
+    case LEDRED:
+    case LEDBLUE:
+        LED_GPIO_PORT[Led]->BSRRL = LED_GPIO_PIN[Led];
+        break;
 
-	case LED_RGB:	//LED_SetRGBColor() should be called first for this Case
-		if(LED_RGB_OVERRIDE == 0)
-		{
-			TIM1->CCR2 = LED_TIM_CCR[2];
-			TIM1->CCR3 = LED_TIM_CCR[3];
-			TIM1->CCR1 = LED_TIM_CCR[1];
-		}
-		else
-		{
-			TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
-			TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
-			TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
-		}
+    // case LED_RGB:    //LED_SetRGBColor() should be called first for this Case
+    //  if(LED_RGB_OVERRIDE == 0)
+    //  {
+    //      TIM1->CCR2 = LED_TIM_CCR[2];
+    //      TIM1->CCR3 = LED_TIM_CCR[3];
+    //      TIM1->CCR1 = LED_TIM_CCR[1];
+    //  }
+    //  else
+    //  {
+    //      TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
+    //      TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
+    //      TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
+    //  }
 
-    led_fade_step = NUM_LED_FADE_STEPS - 1;
-    led_fade_direction = -1; /* next fade is falling */
-		break;
-          default:
-		break;
-	}
+    //  led_fade_step = NUM_LED_FADE_STEPS - 1;
+    //  led_fade_direction = -1; /* next fade is falling */
+    //  break;
+    default:
+        break;
+    }
 }
 
 /**
@@ -604,22 +607,25 @@ void LED_On(Led_TypeDef Led)
   */
 void LED_Off(Led_TypeDef Led)
 {
-	switch(Led)
-	{
-	case LED_USER:
-		LED_GPIO_PORT[Led]->BSRRH = LED_GPIO_PIN[Led];
-		break;
+    switch(Led)
+    {
+    case LEDGREEN:
+    case LEDORANGE:
+    case LEDRED:
+    case LEDBLUE:
+        LED_GPIO_PORT[Led]->BSRRH = LED_GPIO_PIN[Led];
+        break;
 
-	case LED_RGB:
-		TIM1->CCR2 = 0;
-		TIM1->CCR3 = 0;
-		TIM1->CCR1 = 0;
-    led_fade_step = 0;
-    led_fade_direction = 1; /* next fade is rising. */
-		break;
-	default:
-		break;
-	}
+    // case LED_RGB:
+    //  TIM1->CCR2 = 0;
+    //  TIM1->CCR3 = 0;
+    //  TIM1->CCR1 = 0;
+    //  led_fade_step = 0;
+    //  led_fade_direction = 1; /* next fade is rising. */
+    //  break;
+    default:
+        break;
+    }
 }
 
 /**
@@ -631,51 +637,54 @@ void LED_Off(Led_TypeDef Led)
   */
 void LED_Toggle(Led_TypeDef Led)
 {
-	switch(Led)
-	{
-	case LED_USER:
-		LED_GPIO_PORT[Led]->ODR ^= LED_GPIO_PIN[Led];
-		break;
-	default:
-		break;
+    switch(Led)
+    {
+    case LEDGREEN:
+    case LEDORANGE:
+    case LEDRED:
+    case LEDBLUE:
+        LED_GPIO_PORT[Led]->ODR ^= LED_GPIO_PIN[Led];
+        break;
+    default:
+        break;
 
-	case LED_RGB://LED_SetRGBColor() and LED_On() should be called first for this Case
-		if(LED_RGB_OVERRIDE == 0)
-		{
-      if (TIM1->CCR2)
-        TIM1->CCR2 = 0;
-      else
-        TIM1->CCR2 = LED_TIM_CCR[2];
+    // case LED_RGB://LED_SetRGBColor() and LED_On() should be called first for this Case
+    //  if(LED_RGB_OVERRIDE == 0)
+    //  {
+    //   if (TIM1->CCR2)
+    //  TIM1->CCR2 = 0;
+    //   else
+    //  TIM1->CCR2 = LED_TIM_CCR[2];
 
-      if (TIM1->CCR3)
-        TIM1->CCR3 = 0;
-      else
-        TIM1->CCR3 = LED_TIM_CCR[3];
+    //   if (TIM1->CCR3)
+    //  TIM1->CCR3 = 0;
+    //   else
+    //  TIM1->CCR3 = LED_TIM_CCR[3];
 
-      if (TIM1->CCR1)
-        TIM1->CCR1 = 0;
-      else
-        TIM1->CCR1 = LED_TIM_CCR[1];
-		}
-		else
-		{
-      if (TIM1->CCR2)
-        TIM1->CCR2 = 0;
-      else
-        TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
+    //   if (TIM1->CCR1)
+    //  TIM1->CCR1 = 0;
+    //   else
+    //  TIM1->CCR1 = LED_TIM_CCR[1];
+    //  }
+    //  else
+    //  {
+    //   if (TIM1->CCR2)
+    //  TIM1->CCR2 = 0;
+    //   else
+    //  TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
 
-      if (TIM1->CCR3)
-        TIM1->CCR3 = 0;
-      else
-        TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
+    //   if (TIM1->CCR3)
+    //  TIM1->CCR3 = 0;
+    //   else
+    //  TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
 
-      if (TIM1->CCR1)
-        TIM1->CCR1 = 0;
-      else
-        TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
-		}
-		break;
-	}
+    //   if (TIM1->CCR1)
+    //  TIM1->CCR1 = 0;
+    //   else
+    //  TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
+    //  }
+    //  break;
+    }
 }
 
 /**
@@ -695,21 +704,21 @@ void LED_Fade(Led_TypeDef Led)
 
   led_fade_step += led_fade_direction;
 
-	if(Led == LED_RGB)
-	{
-		if(LED_RGB_OVERRIDE == 0)
-		{
-      TIM1->CCR2 = (((uint32_t) LED_TIM_CCR[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-      TIM1->CCR3 = (((uint32_t) LED_TIM_CCR[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-      TIM1->CCR1 = (((uint32_t) LED_TIM_CCR[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-		}
-		else
-		{
-      TIM1->CCR2 = (((uint32_t) LED_TIM_CCR_SIGNAL[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-      TIM1->CCR3 = (((uint32_t) LED_TIM_CCR_SIGNAL[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-      TIM1->CCR1 = (((uint32_t) LED_TIM_CCR_SIGNAL[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-		}
-	}
+    // if(Led == LED_RGB)
+    // {
+    //  if(LED_RGB_OVERRIDE == 0)
+    //  {
+    //   TIM1->CCR2 = (((uint32_t) LED_TIM_CCR[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //   TIM1->CCR3 = (((uint32_t) LED_TIM_CCR[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //   TIM1->CCR1 = (((uint32_t) LED_TIM_CCR[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //  }
+    //  else
+    //  {
+    //   TIM1->CCR2 = (((uint32_t) LED_TIM_CCR_SIGNAL[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //   TIM1->CCR3 = (((uint32_t) LED_TIM_CCR_SIGNAL[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //   TIM1->CCR1 = (((uint32_t) LED_TIM_CCR_SIGNAL[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+    //  }
+    // }
 }
 
 /**
@@ -734,28 +743,30 @@ void BUTTON_Init(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
     RCC_AHB1PeriphClockCmd(BUTTON_GPIO_CLK[Button], ENABLE);
 
     /* Configure Button pin as input floating */
-    GPIO_InitStructure.GPIO_Mode = BUTTON_GPIO_MODE[Button];
-    GPIO_InitStructure.GPIO_PuPd = BUTTON_GPIO_PUPD[Button];
     GPIO_InitStructure.GPIO_Pin = BUTTON_GPIO_PIN[Button];
+    GPIO_InitStructure.GPIO_Mode = BUTTON_GPIO_MODE[Button];
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;   // this sets the pin type to push / pull (as opposed to open drain)
+    GPIO_InitStructure.GPIO_PuPd = BUTTON_GPIO_PUPD[Button];
     GPIO_Init(BUTTON_GPIO_PORT[Button], &GPIO_InitStructure);
 
     if (Button_Mode == BUTTON_MODE_EXTI)
     {
-    	/* Disable TIM1 CC4 Interrupt */
+        /* Disable TIM1 CC4 Interrupt */
         TIM_ITConfig(TIM1, TIM_IT_CC4, DISABLE);
 
         /* Enable the TIM1 Interrupt */
         NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = TIM1_CC_IRQ_PRIORITY;	//OLD: 0x02
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;							//OLD: 0x00
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = TIM1_CC_IRQ_PRIORITY;    //OLD: 0x02
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                           //OLD: 0x00
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
         NVIC_Init(&NVIC_InitStructure);
 
         /* Enable the Button EXTI Interrupt */
         NVIC_InitStructure.NVIC_IRQChannel = BUTTON_IRQn[Button];
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = EXTI2_IRQ_PRIORITY;		//OLD: 0x02
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;							//OLD: 0x01
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = EXTI2_IRQ_PRIORITY;      //OLD: 0x02
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                           //OLD: 0x01
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
         NVIC_Init(&NVIC_InitStructure);
@@ -769,15 +780,15 @@ void BUTTON_EXTI_Config(Button_TypeDef Button, FunctionalState NewState)
     EXTI_InitTypeDef EXTI_InitStructure;
 
     /* Connect EXTI Line to appropriate GPIO Pin */
- 	SYSCFG_EXTILineConfig(BUTTON_GPIO_PORT_SOURCE[Button], BUTTON_GPIO_PIN_SOURCE[Button]);
+    SYSCFG_EXTILineConfig(BUTTON_GPIO_PORT_SOURCE[Button], BUTTON_GPIO_PIN_SOURCE[Button]);
 
-	/* Clear the EXTI line pending flag */	
-	EXTI_ClearFlag(BUTTON_EXTI_LINE[Button]);
+    /* Clear the EXTI line pending flag */  
+    EXTI_ClearFlag(BUTTON_EXTI_LINE[Button]);
 
     /* Configure Button EXTI line */
     EXTI_InitStructure.EXTI_Line = BUTTON_EXTI_LINE[Button];
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = BUTTON_EXTI_TRIGGER[Button];
+    EXTI_InitStructure.EXTI_Trigger = BUTTON_EXTI_TRIGGER[Button];
     EXTI_InitStructure.EXTI_LineCmd = NewState;
     EXTI_Init(&EXTI_InitStructure);
 }
@@ -805,12 +816,12 @@ uint8_t BUTTON_GetState(Button_TypeDef Button)
   */
 uint16_t BUTTON_GetDebouncedTime(Button_TypeDef Button)
 {
-	return BUTTON_DEBOUNCED_TIME[Button];
+    return BUTTON_DEBOUNCED_TIME[Button];
 }
 
 void BUTTON_ResetDebouncedState(Button_TypeDef Button)
 {
-	BUTTON_DEBOUNCED_TIME[Button] = 0;
+    BUTTON_DEBOUNCED_TIME[Button] = 0;
 }
 
 /**
@@ -820,27 +831,27 @@ void BUTTON_ResetDebouncedState(Button_TypeDef Button)
  */
 void CC3000_WIFI_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-	/* CC3000_WIFI_CS_GPIO and CC3000_WIFI_EN_GPIO Peripheral clock enable */
-	RCC_AHB1PeriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
+    /* CC3000_WIFI_CS_GPIO and CC3000_WIFI_EN_GPIO Peripheral clock enable */
+    RCC_AHB1PeriphClockCmd(CC3000_WIFI_CS_GPIO_CLK | CC3000_WIFI_EN_GPIO_CLK, ENABLE);
 
-	/* Configure CC3000_WIFI pins: CS */
-	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_CS_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_Init(CC3000_WIFI_CS_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_WIFI pins: CS */
+    GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_CS_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_Init(CC3000_WIFI_CS_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Deselect CC3000 */
-	CC3000_CS_HIGH();
+    /* Deselect CC3000 */
+    CC3000_CS_HIGH();
 
-	/* Configure CC3000_WIFI pins: Enable */
-	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_EN_GPIO_PIN;
-	GPIO_Init(CC3000_WIFI_EN_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_WIFI pins: Enable */
+    GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_EN_GPIO_PIN;
+    GPIO_Init(CC3000_WIFI_EN_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Disable CC3000 */
-	CC3000_Write_Enable_Pin(WLAN_DISABLE);
+    /* Disable CC3000 */
+    CC3000_Write_Enable_Pin(WLAN_DISABLE);
 }
 
 /**
@@ -850,46 +861,46 @@ void CC3000_WIFI_Init(void)
  */
 void CC3000_SPI_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	SPI_InitTypeDef SPI_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    SPI_InitTypeDef SPI_InitStructure;
 
-	/* CC3000_SPI_SCK_GPIO, CC3000_SPI_MOSI_GPIO and CC3000_SPI_MISO_GPIO Peripheral clock enable */
-	RCC_AHB1PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK | CC3000_SPI_MOSI_GPIO_CLK | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
+    /* CC3000_SPI_SCK_GPIO, CC3000_SPI_MOSI_GPIO and CC3000_SPI_MISO_GPIO Peripheral clock enable */
+    RCC_AHB1PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK | CC3000_SPI_MOSI_GPIO_CLK | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
 
-	/* CC3000_SPI Peripheral clock enable */
-	CC3000_SPI_CLK_CMD(CC3000_SPI_CLK, ENABLE);
+    /* CC3000_SPI Peripheral clock enable */
+    CC3000_SPI_CLK_CMD(CC3000_SPI_CLK, ENABLE);
 
-	/* Configure CC3000_SPI pins: SCK */
-	GPIO_InitStructure.GPIO_Pin = CC3000_SPI_SCK_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(CC3000_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_SPI pins: SCK */
+    GPIO_InitStructure.GPIO_Pin = CC3000_SPI_SCK_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(CC3000_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure CC3000_SPI pins: MOSI */
-	GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MOSI_GPIO_PIN;
-	GPIO_Init(CC3000_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_SPI pins: MOSI */
+    GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MOSI_GPIO_PIN;
+    GPIO_Init(CC3000_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure CC3000_SPI pins: MISO */
-	GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MISO_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(CC3000_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_SPI pins: MISO */
+    GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MISO_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(CC3000_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
-	/* CC3000_SPI Config */
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = CC3000_SPI_BAUDRATE_PRESCALER;
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_CRCPolynomial = 7;
-	SPI_Init(CC3000_SPI, &SPI_InitStructure);
+    /* CC3000_SPI Config */
+    SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+    SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+    SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+    SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+    SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+    SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+    SPI_InitStructure.SPI_BaudRatePrescaler = CC3000_SPI_BAUDRATE_PRESCALER;
+    SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+    SPI_InitStructure.SPI_CRCPolynomial = 7;
+    SPI_Init(CC3000_SPI, &SPI_InitStructure);
 
-	CC3000_SPI_CR = CC3000_SPI->CR1;
+    CC3000_SPI_CR = CC3000_SPI->CR1;
 }
 
 /**
@@ -899,165 +910,165 @@ void CC3000_SPI_Init(void)
  */
 void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint8_t* buffer, uint16_t NumData)
 {
-	DMA_InitTypeDef DMA_InitStructure;
+    DMA_InitTypeDef DMA_InitStructure;
 
-	RCC_AHB1PeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
+    RCC_AHB1PeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
 
-	DMA_InitStructure.DMA_PeripheralBaseAddr = CC3000_SPI_DR_BASE;
-	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer;
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+    DMA_InitStructure.DMA_PeripheralBaseAddr = CC3000_SPI_DR_BASE;
+    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer;
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
 
-	/* DMA used for Reception */
-	if (Direction == CC3000_DMA_RX)
-	{
-		DMA_InitStructure.DMA_Channel = CC3000_SPI_RX_DMA_CHANNEL;
-		DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-		DMA_InitStructure.DMA_BufferSize = NumData;
-		DMA_DeInit(CC3000_SPI_RX_DMA_STREAM );
-		DMA_Init(CC3000_SPI_RX_DMA_STREAM, &DMA_InitStructure);
-	}
-	/* DMA used for Transmission */
-	else if (Direction == CC3000_DMA_TX)
-	{
-		DMA_InitStructure.DMA_Channel = CC3000_SPI_TX_DMA_CHANNEL;
-		DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-		DMA_InitStructure.DMA_BufferSize = NumData;
-		DMA_DeInit(CC3000_SPI_TX_DMA_STREAM );
-		DMA_Init(CC3000_SPI_TX_DMA_STREAM, &DMA_InitStructure);
-	}
+    /* DMA used for Reception */
+    if (Direction == CC3000_DMA_RX)
+    {
+        DMA_InitStructure.DMA_Channel = CC3000_SPI_RX_DMA_CHANNEL;
+        DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+        DMA_InitStructure.DMA_BufferSize = NumData;
+        DMA_DeInit(CC3000_SPI_RX_DMA_STREAM );
+        DMA_Init(CC3000_SPI_RX_DMA_STREAM, &DMA_InitStructure);
+    }
+    /* DMA used for Transmission */
+    else if (Direction == CC3000_DMA_TX)
+    {
+        DMA_InitStructure.DMA_Channel = CC3000_SPI_TX_DMA_CHANNEL;
+        DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+        DMA_InitStructure.DMA_BufferSize = NumData;
+        DMA_DeInit(CC3000_SPI_TX_DMA_STREAM );
+        DMA_Init(CC3000_SPI_TX_DMA_STREAM, &DMA_InitStructure);
+    }
 }
 
 void CC3000_SPI_DMA_Init(void)
 {
-	NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* Configure and enable SPI DMA TX Channel interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = CC3000_SPI_TX_DMA_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = DMA1_STREAM4_IRQ_PRIORITY;	//OLD: 0x00
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x00
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    /* Configure and enable SPI DMA TX Channel interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = CC3000_SPI_TX_DMA_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = DMA1_STREAM4_IRQ_PRIORITY;   //OLD: 0x00
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                               //OLD: 0x00
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
-	CC3000_SPI_Init();
+    CC3000_SPI_Init();
 
-	/* Configure DMA Peripheral but don't send data*/
-	CC3000_DMA_Config(CC3000_DMA_RX, (uint16_t*) wlan_rx_buffer, 0);
-	CC3000_DMA_Config(CC3000_DMA_TX, (uint16_t*) wlan_tx_buffer, 0);
+    /* Configure DMA Peripheral but don't send data*/
+    CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) wlan_rx_buffer, 0);
+    CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) wlan_tx_buffer, 0);
 
-	/* Enable SPI DMA TX Channel Transfer Complete Interrupt */
-	DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
+    /* Enable SPI DMA TX Channel Transfer Complete Interrupt */
+    DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
 
-	/* Enable SPI DMA request */
-	SPI_I2S_DMACmd(CC3000_SPI, SPI_I2S_DMAReq_Rx, ENABLE);
-	SPI_I2S_DMACmd(CC3000_SPI, SPI_I2S_DMAReq_Tx, ENABLE);
+    /* Enable SPI DMA request */
+    SPI_I2S_DMACmd(CC3000_SPI, SPI_I2S_DMAReq_Rx, ENABLE);
+    SPI_I2S_DMACmd(CC3000_SPI, SPI_I2S_DMAReq_Tx, ENABLE);
 
-	/* Enable CC3000_SPI */
-	SPI_Cmd(CC3000_SPI, ENABLE);
+    /* Enable CC3000_SPI */
+    SPI_Cmd(CC3000_SPI, ENABLE);
 
-	/* Enable DMA RX Channel */
-	DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, ENABLE);
-	/* Enable DMA TX Channel */
-	DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
+    /* Enable DMA RX Channel */
+    DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, ENABLE);
+    /* Enable DMA TX Channel */
+    DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
 }
 
 void CC3000_SPI_DMA_Streams(FunctionalState NewState)
 {
-	/* Enable/Disable DMA RX Channel */
-	DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, NewState);
-	/* Enable/Disable DMA TX Channel */
-	DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, NewState);
+    /* Enable/Disable DMA RX Channel */
+    DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, NewState);
+    /* Enable/Disable DMA TX Channel */
+    DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, NewState);
 }
 
 /* Select CC3000: ChipSelect pin low */
 void CC3000_CS_LOW(void)
 {
-	acquire_spi_bus(BUS_OWNER_CC3000);
-	CC3000_SPI->CR1 &= ((uint16_t)0xFFBF);
-	CC3000_SPI->CR1 = CC3000_SPI_CR | ((uint16_t)0x0040);
-	GPIO_ResetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
+    acquire_spi_bus(BUS_OWNER_CC3000);
+    CC3000_SPI->CR1 &= ((uint16_t)0xFFBF);
+    CC3000_SPI->CR1 = CC3000_SPI_CR | ((uint16_t)0x0040);
+    GPIO_ResetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
 }
 
 /* Deselect CC3000: ChipSelect pin high */
 void CC3000_CS_HIGH(void)
 {
-	GPIO_SetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
-	release_spi_bus(BUS_OWNER_CC3000);
+    GPIO_SetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
+    release_spi_bus(BUS_OWNER_CC3000);
 }
 
 /* CC3000 Hardware related callbacks passed to wlan_init */
 long CC3000_Read_Interrupt_Pin(void)
 {
-	return GPIO_ReadInputDataBit(CC3000_WIFI_INT_GPIO_PORT, CC3000_WIFI_INT_GPIO_PIN );
+    return GPIO_ReadInputDataBit(CC3000_WIFI_INT_GPIO_PORT, CC3000_WIFI_INT_GPIO_PIN );
 }
 
 void CC3000_Interrupt_Enable(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	EXTI_InitTypeDef EXTI_InitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* CC3000_WIFI_INT_GPIO clock enable */
-	RCC_AHB1PeriphClockCmd(CC3000_WIFI_INT_GPIO_CLK, ENABLE);
+    /* CC3000_WIFI_INT_GPIO clock enable */
+    RCC_AHB1PeriphClockCmd(CC3000_WIFI_INT_GPIO_CLK, ENABLE);
 
-	/* Configure CC3000_WIFI pins: Interrupt */
-	GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_INT_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(CC3000_WIFI_INT_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure CC3000_WIFI pins: Interrupt */
+    GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_INT_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_Init(CC3000_WIFI_INT_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Select the CC3000_WIFI_INT GPIO pin used as EXTI Line */
-	SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE);
+    /* Select the CC3000_WIFI_INT GPIO pin used as EXTI Line */
+    SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE);
 
-	/* Clear the EXTI line pending flag */
-	EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE );
+    /* Clear the EXTI line pending flag */
+    EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE );
 
-	/* Configure and Enable CC3000_WIFI_INT EXTI line */
-	EXTI_InitStructure.EXTI_Line = CC3000_WIFI_INT_EXTI_LINE;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
+    /* Configure and Enable CC3000_WIFI_INT EXTI line */
+    EXTI_InitStructure.EXTI_Line = CC3000_WIFI_INT_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
 
-	/* Enable and set CC3000_WIFI_INT EXTI Interrupt to the lowest priority */
-	NVIC_InitStructure.NVIC_IRQChannel = CC3000_WIFI_INT_EXTI_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = EXTI15_10_IRQ_PRIORITY;		//OLD: 0x00
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x01
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    /* Enable and set CC3000_WIFI_INT EXTI Interrupt to the lowest priority */
+    NVIC_InitStructure.NVIC_IRQChannel = CC3000_WIFI_INT_EXTI_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = EXTI15_10_IRQ_PRIORITY;      //OLD: 0x00
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                               //OLD: 0x01
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 void CC3000_Interrupt_Disable(void)
 {
-	EXTI_InitTypeDef EXTI_InitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* Disable CC3000_WIFI_INT EXTI Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = CC3000_WIFI_INT_EXTI_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    /* Disable CC3000_WIFI_INT EXTI Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = CC3000_WIFI_INT_EXTI_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
-	/* Disable CC3000_WIFI_INT EXTI line */
-	EXTI_InitStructure.EXTI_Line = CC3000_WIFI_INT_EXTI_LINE;
-	EXTI_InitStructure.EXTI_LineCmd = DISABLE;
-	EXTI_Init(&EXTI_InitStructure);
+    /* Disable CC3000_WIFI_INT EXTI line */
+    EXTI_InitStructure.EXTI_Line = CC3000_WIFI_INT_EXTI_LINE;
+    EXTI_InitStructure.EXTI_LineCmd = DISABLE;
+    EXTI_Init(&EXTI_InitStructure);
 }
 
 void CC3000_Write_Enable_Pin(unsigned char val)
 {
-	/* Set WLAN Enable/Disable */
-	if (val != WLAN_DISABLE)
-	{
-		GPIO_SetBits(CC3000_WIFI_EN_GPIO_PORT, CC3000_WIFI_EN_GPIO_PIN );
-	}
-	else
-	{
-		GPIO_ResetBits(CC3000_WIFI_EN_GPIO_PORT, CC3000_WIFI_EN_GPIO_PIN );
-	}
+    /* Set WLAN Enable/Disable */
+    if (val != WLAN_DISABLE)
+    {
+        GPIO_SetBits(CC3000_WIFI_EN_GPIO_PORT, CC3000_WIFI_EN_GPIO_PIN );
+    }
+    else
+    {
+        GPIO_ResetBits(CC3000_WIFI_EN_GPIO_PORT, CC3000_WIFI_EN_GPIO_PIN );
+    }
 }
 
 /**
@@ -1067,34 +1078,34 @@ void CC3000_Write_Enable_Pin(unsigned char val)
   */
 void sFLASH_SPI_DeInit(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-	/* Disable the sFLASH_SPI  */
-	SPI_Cmd(sFLASH_SPI, DISABLE);
+    /* Disable the sFLASH_SPI  */
+    SPI_Cmd(sFLASH_SPI, DISABLE);
 
-	/* DeInitializes the sFLASH_SPI */
-	SPI_I2S_DeInit(sFLASH_SPI);
+    /* DeInitializes the sFLASH_SPI */
+    SPI_I2S_DeInit(sFLASH_SPI);
 
-	/* sFLASH_SPI Peripheral clock disable */
-	sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, DISABLE);
+    /* sFLASH_SPI Peripheral clock disable */
+    sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, DISABLE);
 
-	/* Configure sFLASH_SPI pins: SCK */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: SCK */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_SPI pins: MISO */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
-	GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: MISO */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
+    GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_SPI pins: MOSI */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
-	GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: MOSI */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
+    GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
-	GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
+    GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 }
 
 /**
@@ -1104,77 +1115,77 @@ void sFLASH_SPI_DeInit(void)
   */
 void sFLASH_SPI_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	SPI_InitTypeDef  SPI_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    SPI_InitTypeDef  SPI_InitStructure;
 
-	/* sFLASH_MEM_CS_GPIO, sFLASH_SPI_MOSI_GPIO, sFLASH_SPI_MISO_GPIO
-	   and sFLASH_SPI_SCK_GPIO Periph clock enable */
-	RCC_AHB1PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK | sFLASH_SPI_MOSI_GPIO_CLK | sFLASH_SPI_MISO_GPIO_CLK |
-						 sFLASH_SPI_SCK_GPIO_CLK, ENABLE);
+    /* sFLASH_MEM_CS_GPIO, sFLASH_SPI_MOSI_GPIO, sFLASH_SPI_MISO_GPIO
+       and sFLASH_SPI_SCK_GPIO Periph clock enable */
+    RCC_AHB1PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK | sFLASH_SPI_MOSI_GPIO_CLK | sFLASH_SPI_MISO_GPIO_CLK |
+                         sFLASH_SPI_SCK_GPIO_CLK, ENABLE);
 
-	/* sFLASH_SPI Periph clock enable */
-	sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, ENABLE);
+    /* sFLASH_SPI Periph clock enable */
+    sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, ENABLE);
 
-	/* Configure sFLASH_SPI pins: SCK */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: SCK */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_SPI pins: MOSI */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
-	GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: MOSI */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
+    GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_SPI pins: MISO */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_SPI pins: MISO */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
-	/* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
-	GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
+    /* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 
-	/*!< Deselect the FLASH: Chip Select high */
-	sFLASH_CS_HIGH();
+    /*!< Deselect the FLASH: Chip Select high */
+    sFLASH_CS_HIGH();
 
-	/*!< SPI configuration */
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = sFLASH_SPI_BAUDRATE_PRESCALER;
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_CRCPolynomial = 7;
-	SPI_Init(sFLASH_SPI, &SPI_InitStructure);
+    /*!< SPI configuration */
+    SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+    SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+    SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+    SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+    SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+    SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+    SPI_InitStructure.SPI_BaudRatePrescaler = sFLASH_SPI_BAUDRATE_PRESCALER;
+    SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+    SPI_InitStructure.SPI_CRCPolynomial = 7;
+    SPI_Init(sFLASH_SPI, &SPI_InitStructure);
 
-	sFLASH_SPI_CR = sFLASH_SPI->CR1;
+    sFLASH_SPI_CR = sFLASH_SPI->CR1;
 
-	/*!< Enable the sFLASH_SPI  */
-	SPI_Cmd(sFLASH_SPI, ENABLE);
+    /*!< Enable the sFLASH_SPI  */
+    SPI_Cmd(sFLASH_SPI, ENABLE);
 }
 
 /* Select sFLASH: Chip Select pin low */
 void sFLASH_CS_LOW(void)
 {
-	acquire_spi_bus(BUS_OWNER_SFLASH);
-	sFLASH_SPI->CR1 &= ((uint16_t)0xFFBF);
-	sFLASH_SPI->CR1 = sFLASH_SPI_CR | ((uint16_t)0x0040);
-	GPIO_ResetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+    acquire_spi_bus(BUS_OWNER_SFLASH);
+    sFLASH_SPI->CR1 &= ((uint16_t)0xFFBF);
+    sFLASH_SPI->CR1 = sFLASH_SPI_CR | ((uint16_t)0x0040);
+    GPIO_ResetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
 }
 
 /* Deselect sFLASH: Chip Select pin high */
 void sFLASH_CS_HIGH(void)
 {
-	GPIO_SetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
-	release_spi_bus(BUS_OWNER_SFLASH);
-	handle_spi_request();
+    GPIO_SetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+    release_spi_bus(BUS_OWNER_SFLASH);
+    handle_spi_request();
 }
 
 /*******************************************************************************
@@ -1185,17 +1196,17 @@ void sFLASH_CS_HIGH(void)
 *******************************************************************************/
 void USB_Disconnect_Config(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-	/* Enable USB_DISCONNECT GPIO clock */
-	RCC_AHB1PeriphClockCmd(USB_DISCONNECT_GPIO_CLK, ENABLE);
+    /* Enable USB_DISCONNECT GPIO clock */
+    RCC_AHB1PeriphClockCmd(USB_DISCONNECT_GPIO_CLK, ENABLE);
 
-	/* USB_DISCONNECT_GPIO_PIN used as USB pull-up */
-	GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-	GPIO_Init(USB_DISCONNECT_GPIO_PORT, &GPIO_InitStructure);
+    /* USB_DISCONNECT_GPIO_PIN used as USB pull-up */
+    GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+    GPIO_Init(USB_DISCONNECT_GPIO_PORT, &GPIO_InitStructure);
 }
 
 /*******************************************************************************
@@ -1206,11 +1217,11 @@ void USB_Disconnect_Config(void)
 *******************************************************************************/
 void Set_USBClock(void)
 {
-	// /* Select USBCLK source */
-	// RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
+    // /* Select USBCLK source */
+    // RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
 
-	// /* Enable the USB clock */
-	// RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
+    /* Enable the USB clock */
+    RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, ENABLE);
 }
 
 /*******************************************************************************
@@ -1219,11 +1230,11 @@ void Set_USBClock(void)
 * Input          : None.
 * Return         : None.
 *******************************************************************************/
-void Enter_LowPowerMode(void)
-{
-	/* Set the device state to suspend */
-	bDeviceState = SUSPENDED;
-}
+// void Enter_LowPowerMode(void)
+// {
+//   Set the device state to suspend 
+//  bDeviceState = SUSPENDED;
+// }
 
 /*******************************************************************************
 * Function Name  : Leave_LowPowerMode
@@ -1233,18 +1244,18 @@ void Enter_LowPowerMode(void)
 *******************************************************************************/
 void Leave_LowPowerMode(void)
 {
-	DEVICE_INFO *pInfo = &Device_Info;
+    // DEVICE_INFO *pInfo = &Device_Info;
 
-	/* Set the device state to the correct state */
-	if (pInfo->Current_Configuration != 0)
-	{
-		/* Device configured */
-		bDeviceState = CONFIGURED;
-	}
-	else
-	{
-		bDeviceState = ATTACHED;
-	}
+    // /* Set the device state to the correct state */
+    // if (pInfo->Current_Configuration != 0)
+    // {
+    //  /* Device configured */
+    //  bDeviceState = CONFIGURED;
+    // }
+    // else
+    // {
+    //  bDeviceState = ATTACHED;
+    // }
 }
 
 /*******************************************************************************
@@ -1255,14 +1266,14 @@ void Leave_LowPowerMode(void)
 *******************************************************************************/
 void USB_Interrupts_Config(void)
 {
-	// NVIC_InitTypeDef NVIC_InitStructure;
+    // NVIC_InitTypeDef NVIC_InitStructure;
 
-	// /* Enable the USB interrupt */
-	// NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
-	// NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_LP_IRQ_PRIORITY;			//OLD: 0x01
-	// NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;								//OLD: 0x00
-	// NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	// NVIC_Init(&NVIC_InitStructure);
+    // /* Enable the USB interrupt */
+    // NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
+    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_LP_IRQ_PRIORITY;          //OLD: 0x01
+    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                                //OLD: 0x00
+    // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    // NVIC_Init(&NVIC_InitStructure);
 }
 
 /*******************************************************************************
@@ -1273,163 +1284,163 @@ void USB_Interrupts_Config(void)
 *******************************************************************************/
 void USB_Cable_Config (FunctionalState NewState)
 {
-	if (NewState != DISABLE)
-	{
-		GPIO_ResetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
-	}
-	else
-	{
-		GPIO_SetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
-	}
+    if (NewState != DISABLE)
+    {
+        GPIO_ResetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
+    }
+    else
+    {
+        GPIO_SetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
+    }
 }
 
 void Load_SystemFlags(void)
 {
-	uint32_t Address = SYSTEM_FLAGS_ADDRESS;
+    uint32_t Address = SYSTEM_FLAGS_ADDRESS;
 
-	if(!USE_SYSTEM_FLAGS)
-		return;
+    if(!USE_SYSTEM_FLAGS)
+        return;
 
-	CORE_FW_Version_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 4;
+    CORE_FW_Version_SysFlag = (*(__IO uint32_t*) Address);
+    Address += 4;
 
-	NVMEM_SPARK_Reset_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 4;
+    NVMEM_SPARK_Reset_SysFlag = (*(__IO uint32_t*) Address);
+    Address += 4;
 
-	FLASH_OTA_Update_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 4;
+    FLASH_OTA_Update_SysFlag = (*(__IO uint32_t*) Address);
+    Address += 4;
 
-	OTA_FLASHED_Status_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 4;
+    OTA_FLASHED_Status_SysFlag = (*(__IO uint32_t*) Address);
+    Address += 4;
 
-	Factory_Reset_SysFlag = (*(__IO uint32_t*) Address);
-	Address += 4;
+    Factory_Reset_SysFlag = (*(__IO uint32_t*) Address);
+    Address += 4;
 }
 
 void Save_SystemFlags(void)
 {
-	uint32_t Address = SYSTEM_FLAGS_ADDRESS;
-	FLASH_Status FLASHStatus = FLASH_COMPLETE;
+    uint32_t Address = SYSTEM_FLAGS_ADDRESS;
+    FLASH_Status FLASHStatus = FLASH_COMPLETE;
 
-	if(!USE_SYSTEM_FLAGS)
-		return;
+    if(!USE_SYSTEM_FLAGS)
+        return;
 
-	/* Unlock the Flash Program Erase Controller */
-	FLASH_Unlock();
+    /* Unlock the Flash Program Erase Controller */
+    FLASH_Unlock();
 
-	/* Clear All pending flags */
-	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
-		| FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
+    /* Clear All pending flags */
+    FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
+        | FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
 
-	/* Erase the Internal Flash pages */
-	FLASHStatus = FLASH_EraseSector(SYSTEM_FLAGS_SECTOR, VoltageRange_3);
-	while(FLASHStatus != FLASH_COMPLETE);
+    /* Erase the Internal Flash pages */
+    FLASHStatus = FLASH_EraseSector(SYSTEM_FLAGS_SECTOR, VoltageRange_3);
+    while(FLASHStatus != FLASH_COMPLETE);
 
-	/* Program CORE_FW_Version_SysFlag */
-	FLASHStatus = FLASH_ProgramWord(Address, CORE_FW_Version_SysFlag);
-	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 4;
+    /* Program CORE_FW_Version_SysFlag */
+    FLASHStatus = FLASH_ProgramWord(Address, CORE_FW_Version_SysFlag);
+    while(FLASHStatus != FLASH_COMPLETE);
+    Address += 4;
 
-	/* Program NVMEM_SPARK_Reset_SysFlag */
-	FLASHStatus = FLASH_ProgramWord(Address, NVMEM_SPARK_Reset_SysFlag);
-	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 4;
+    /* Program NVMEM_SPARK_Reset_SysFlag */
+    FLASHStatus = FLASH_ProgramWord(Address, NVMEM_SPARK_Reset_SysFlag);
+    while(FLASHStatus != FLASH_COMPLETE);
+    Address += 4;
 
-	/* Program FLASH_OTA_Update_SysFlag */
-	FLASHStatus = FLASH_ProgramWord(Address, FLASH_OTA_Update_SysFlag);
-	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 4;
+    /* Program FLASH_OTA_Update_SysFlag */
+    FLASHStatus = FLASH_ProgramWord(Address, FLASH_OTA_Update_SysFlag);
+    while(FLASHStatus != FLASH_COMPLETE);
+    Address += 4;
 
-	/* Program OTA_FLASHED_Status_SysFlag */
-	FLASHStatus = FLASH_ProgramWord(Address, OTA_FLASHED_Status_SysFlag);
-	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 4;
+    /* Program OTA_FLASHED_Status_SysFlag */
+    FLASHStatus = FLASH_ProgramWord(Address, OTA_FLASHED_Status_SysFlag);
+    while(FLASHStatus != FLASH_COMPLETE);
+    Address += 4;
 
-	/* Program Factory_Reset_SysFlag */
-	FLASHStatus = FLASH_ProgramWord(Address, Factory_Reset_SysFlag);
-	while(FLASHStatus != FLASH_COMPLETE);
-	Address += 4;
+    /* Program Factory_Reset_SysFlag */
+    FLASHStatus = FLASH_ProgramWord(Address, Factory_Reset_SysFlag);
+    while(FLASHStatus != FLASH_COMPLETE);
+    Address += 4;
 
-	/* Locks the FLASH Program Erase Controller */
-	FLASH_Lock();
+    /* Locks the FLASH Program Erase Controller */
+    FLASH_Lock();
 }
 
 void FLASH_WriteProtection_Enable(uint32_t FLASH_Sectors)
 {
-	/* Enable the FLASH option control register access */
-	FLASH_OB_Unlock();
+    /* Enable the FLASH option control register access */
+    FLASH_OB_Unlock();
 
-	/* Get pages write protection status */
-	WRPR_Value = FLASH_OB_GetWRP();
+    /* Get pages write protection status */
+    WRPR_Value = FLASH_OB_GetWRP();
 
-	/* Check if desired pages are not yet write protected */
-	if(((~WRPR_Value) & FLASH_Sectors ) != FLASH_Sectors)
-	{
-		/* Get current write protected pages and the new pages to be protected */
-		Flash_Sectors_Protected =  (~WRPR_Value) | FLASH_Sectors;
+    /* Check if desired pages are not yet write protected */
+    if(((~WRPR_Value) & FLASH_Sectors ) != FLASH_Sectors)
+    {
+        /* Get current write protected pages and the new pages to be protected */
+        Flash_Sectors_Protected =  (~WRPR_Value) | FLASH_Sectors;
 
-		/* Erase all the option Bytes because if a program operation is
-	      performed on a protected page, the Flash memory returns a
-	      protection error */
-		//FLASHStatus = FLASH_EraseOptionBytes();
+        /* Erase all the option Bytes because if a program operation is
+          performed on a protected page, the Flash memory returns a
+          protection error */
+        //FLASHStatus = FLASH_EraseOptionBytes();
 
-		/* Enable the pages write protection */
-		FLASH_OB_WRPConfig(Flash_Sectors_Protected, ENABLE);
+        /* Enable the pages write protection */
+        FLASH_OB_WRPConfig(Flash_Sectors_Protected, ENABLE);
 
-		/* Launch the Option Bytes programming process. */
-		FLASH_OB_Launch();
+        /* Launch the Option Bytes programming process. */
+        FLASH_OB_Launch();
 
-		/* Generate System Reset to load the new option byte values */
-		//NVIC_SystemReset();
-	}
+        /* Generate System Reset to load the new option byte values */
+        //NVIC_SystemReset();
+    }
 
-	/* Disable the FLASH option control register access */
-	FLASH_OB_Lock();
+    /* Disable the FLASH option control register access */
+    FLASH_OB_Lock();
 }
 
 void FLASH_WriteProtection_Disable(uint32_t FLASH_Sectors)
 {
-	/* Enable the FLASH option control register access */
-	FLASH_OB_Unlock();
+    /* Enable the FLASH option control register access */
+    FLASH_OB_Unlock();
 
-	/* Enable the pages write protection */
-	FLASH_OB_WRPConfig(FLASH_Sectors, DISABLE);
+    /* Enable the pages write protection */
+    FLASH_OB_WRPConfig(FLASH_Sectors, DISABLE);
 
-	/* Launch the Option Bytes programming process. */
-	FLASH_OB_Launch();
+    /* Launch the Option Bytes programming process. */
+    FLASH_OB_Launch();
 
-	/* Disable the FLASH option control register access */
-	FLASH_OB_Lock();
+    /* Disable the FLASH option control register access */
+    FLASH_OB_Lock();
 
-	/* Generate System Reset to load the new option byte values */
-	//NVIC_SystemReset();
+    /* Generate System Reset to load the new option byte values */
+    //NVIC_SystemReset();
 }
 
 void FLASH_Erase(void)
 {
-	FLASHStatus = FLASH_COMPLETE;
+    FLASHStatus = FLASH_COMPLETE;
 
-	/* Unlock the Flash Program Erase Controller */
-	FLASH_Unlock();
+    /* Unlock the Flash Program Erase Controller */
+    FLASH_Unlock();
 
-	/* Clear All pending flags */
-	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
-		| FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
+    /* Clear All pending flags */
+    FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR 
+        | FLASH_FLAG_PGSERR | FLASH_FLAG_WRPERR);
 
-	/* TODO: Come up with a cleaner method here... */
-	/* Erase the Internal Flash (FW is sectors 3-11) */
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_3, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_4, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_5, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_6, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_7, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_8, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_9, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_10, VoltageRange_3);
-	FLASHStatus = FLASH_EraseSector(FLASH_Sector_11, VoltageRange_3);
+    /* TODO: Come up with a cleaner method here... */
+    /* Erase the Internal Flash (FW is sectors 3-11) */
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_3, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_4, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_5, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_6, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_7, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_8, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_9, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_10, VoltageRange_3);
+    FLASHStatus = FLASH_EraseSector(FLASH_Sector_11, VoltageRange_3);
 
-	/* Locks the FLASH Program Erase Controller */
-	FLASH_Lock();
+    /* Locks the FLASH Program Erase Controller */
+    FLASH_Lock();
 }
 
 void FLASH_Backup(uint32_t sFLASH_Address)
@@ -1437,37 +1448,37 @@ void FLASH_Backup(uint32_t sFLASH_Address)
 #ifdef SPARK_SFLASH_ENABLE
 
     /* Initialize SPI Flash */
-	sFLASH_Init();
+    sFLASH_Init();
 
-	/* Define the number of External Flash pages to be erased */
-	NbrOfPage = EXTERNAL_FLASH_BLOCK_SIZE / sFLASH_PAGESIZE;
+    /* Define the number of External Flash pages to be erased */
+    NbrOfPage = EXTERNAL_FLASH_BLOCK_SIZE / sFLASH_PAGESIZE;
 
-	/* Erase the SPI Flash pages */
-	for (EraseCounter = 0; (EraseCounter < NbrOfPage); EraseCounter++)
-	{
-		sFLASH_EraseSector(sFLASH_Address + (sFLASH_PAGESIZE * EraseCounter));
-	}
+    /* Erase the SPI Flash pages */
+    for (EraseCounter = 0; (EraseCounter < NbrOfPage); EraseCounter++)
+    {
+        sFLASH_EraseSector(sFLASH_Address + (sFLASH_PAGESIZE * EraseCounter));
+    }
 
-	Internal_Flash_Address = CORE_FW_ADDRESS;
-	External_Flash_Address = sFLASH_Address;
+    Internal_Flash_Address = CORE_FW_ADDRESS;
+    External_Flash_Address = sFLASH_Address;
 
-	/* Program External Flash */
-	while (Internal_Flash_Address < INTERNAL_FLASH_END_ADDRESS)
-	{
-	    /* Read data from Internal Flash memory */
-		Internal_Flash_Data = (*(__IO uint32_t*) Internal_Flash_Address);
-		Internal_Flash_Address += 4;
+    /* Program External Flash */
+    while (Internal_Flash_Address < INTERNAL_FLASH_END_ADDRESS)
+    {
+        /* Read data from Internal Flash memory */
+        Internal_Flash_Data = (*(__IO uint32_t*) Internal_Flash_Address);
+        Internal_Flash_Address += 4;
 
-	    /* Program Word to SPI Flash memory */
-		External_Flash_Data[0] = (uint8_t)(Internal_Flash_Data & 0xFF);
-		External_Flash_Data[1] = (uint8_t)((Internal_Flash_Data & 0xFF00) >> 8);
-		External_Flash_Data[2] = (uint8_t)((Internal_Flash_Data & 0xFF0000) >> 16);
-		External_Flash_Data[3] = (uint8_t)((Internal_Flash_Data & 0xFF000000) >> 24);
-		//OR
-		//*((uint32_t *)External_Flash_Data) = Internal_Flash_Data;
-		sFLASH_WriteBuffer(External_Flash_Data, External_Flash_Address, 4);
-		External_Flash_Address += 4;
-	}
+        /* Program Word to SPI Flash memory */
+        External_Flash_Data[0] = (uint8_t)(Internal_Flash_Data & 0xFF);
+        External_Flash_Data[1] = (uint8_t)((Internal_Flash_Data & 0xFF00) >> 8);
+        External_Flash_Data[2] = (uint8_t)((Internal_Flash_Data & 0xFF0000) >> 16);
+        External_Flash_Data[3] = (uint8_t)((Internal_Flash_Data & 0xFF000000) >> 24);
+        //OR
+        //*((uint32_t *)External_Flash_Data) = Internal_Flash_Data;
+        sFLASH_WriteBuffer(External_Flash_Data, External_Flash_Address, 4);
+        External_Flash_Address += 4;
+    }
 
 #endif
 }
@@ -1478,33 +1489,33 @@ void FLASH_Restore(uint32_t sFLASH_Address)
 #ifdef SPARK_SFLASH_ENABLE
 
     /* Initialize SPI Flash */
-	sFLASH_Init();
+    sFLASH_Init();
 
-	FLASH_Erase();
+    FLASH_Erase();
 
-	Internal_Flash_Address = CORE_FW_ADDRESS;
-	External_Flash_Address = sFLASH_Address;
+    Internal_Flash_Address = CORE_FW_ADDRESS;
+    External_Flash_Address = sFLASH_Address;
 
-	/* Unlock the Flash Program Erase Controller */
-	FLASH_Unlock();
+    /* Unlock the Flash Program Erase Controller */
+    FLASH_Unlock();
 
-	/* Program Internal Flash Bank1 */
-	while ((Internal_Flash_Address < INTERNAL_FLASH_END_ADDRESS) && (FLASHStatus == FLASH_COMPLETE))
-	{
-	    /* Read data from SPI Flash memory */
-	    sFLASH_ReadBuffer(External_Flash_Data, External_Flash_Address, 4);
-	    External_Flash_Address += 4;
+    /* Program Internal Flash Bank1 */
+    while ((Internal_Flash_Address < INTERNAL_FLASH_END_ADDRESS) && (FLASHStatus == FLASH_COMPLETE))
+    {
+        /* Read data from SPI Flash memory */
+        sFLASH_ReadBuffer(External_Flash_Data, External_Flash_Address, 4);
+        External_Flash_Address += 4;
 
-	    /* Program Word to Internal Flash memory */
-	    Internal_Flash_Data = (uint32_t)(External_Flash_Data[0] | (External_Flash_Data[1] << 8) | (External_Flash_Data[2] << 16) | (External_Flash_Data[3] << 24));
-	    //OR
-	    //Internal_Flash_Data = *((uint32_t *)External_Flash_Data);
-		FLASHStatus = FLASH_ProgramWord(Internal_Flash_Address, Internal_Flash_Data);
-		Internal_Flash_Address += 4;
-	}
+        /* Program Word to Internal Flash memory */
+        Internal_Flash_Data = (uint32_t)(External_Flash_Data[0] | (External_Flash_Data[1] << 8) | (External_Flash_Data[2] << 16) | (External_Flash_Data[3] << 24));
+        //OR
+        //Internal_Flash_Data = *((uint32_t *)External_Flash_Data);
+        FLASHStatus = FLASH_ProgramWord(Internal_Flash_Address, Internal_Flash_Data);
+        Internal_Flash_Address += 4;
+    }
 
-	/* Locks the FLASH Program Erase Controller */
-	FLASH_Lock();
+    /* Locks the FLASH Program Erase Controller */
+    FLASH_Lock();
 
 #endif
 }
@@ -1513,25 +1524,25 @@ void FLASH_Begin(uint32_t sFLASH_Address)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	LED_SetRGBColor(RGB_COLOR_MAGENTA);
-    LED_On(LED_RGB);
+    //LED_SetRGBColor(RGB_COLOR_MAGENTA);
+    LED_On(LEDRED);
 
     OTA_FLASHED_Status_SysFlag = 0x00000000;
-	//FLASH_OTA_Update_SysFlag = 0x5555;
-	Save_SystemFlags();
-	//BKP_WriteBackupRegister(BKP_DR10, 0x5555);
+    //FLASH_OTA_Update_SysFlag = 0x5555;
+    Save_SystemFlags();
+    //BKP_WriteBackupRegister(BKP_DR10, 0x5555);
 
-	Flash_Update_Index = 0;
-	External_Flash_Address = sFLASH_Address;
+    Flash_Update_Index = 0;
+    External_Flash_Address = sFLASH_Address;
 
-	/* Define the number of External Flash pages to be erased */
-	NbrOfPage = EXTERNAL_FLASH_BLOCK_SIZE / sFLASH_PAGESIZE;
+    /* Define the number of External Flash pages to be erased */
+    NbrOfPage = EXTERNAL_FLASH_BLOCK_SIZE / sFLASH_PAGESIZE;
 
-	/* Erase the SPI Flash pages */
-	for (EraseCounter = 0; (EraseCounter < NbrOfPage); EraseCounter++)
-	{
-		sFLASH_EraseSector(sFLASH_Address + (sFLASH_PAGESIZE * EraseCounter));
-	}
+    /* Erase the SPI Flash pages */
+    for (EraseCounter = 0; (EraseCounter < NbrOfPage); EraseCounter++)
+    {
+        sFLASH_EraseSector(sFLASH_Address + (sFLASH_PAGESIZE * EraseCounter));
+    }
 
 #endif
 }
@@ -1540,32 +1551,32 @@ uint16_t FLASH_Update(uint8_t *pBuffer, uint32_t bufferSize)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	uint8_t *writeBuffer = pBuffer;
-	uint8_t readBuffer[bufferSize];
+    uint8_t *writeBuffer = pBuffer;
+    uint8_t readBuffer[bufferSize];
 
-	/* Write Data Buffer to SPI Flash memory */
-	sFLASH_WriteBuffer(writeBuffer, External_Flash_Address, bufferSize);
+    /* Write Data Buffer to SPI Flash memory */
+    sFLASH_WriteBuffer(writeBuffer, External_Flash_Address, bufferSize);
 
-	/* Read Data Buffer from SPI Flash memory */
-	sFLASH_ReadBuffer(readBuffer, External_Flash_Address, bufferSize);
+    /* Read Data Buffer from SPI Flash memory */
+    sFLASH_ReadBuffer(readBuffer, External_Flash_Address, bufferSize);
 
-	/* Is the Data Buffer successfully programmed to SPI Flash memory */
-	if (0 == memcmp(writeBuffer, readBuffer, bufferSize))
-	{
-		External_Flash_Address += bufferSize;
-		Flash_Update_Index += 1;
-	}
-	else
-	{
-		/* Erase the problematic SPI Flash pages and back off the chunk index */
-		External_Flash_Address = ((uint32_t)(External_Flash_Address / sFLASH_PAGESIZE)) * sFLASH_PAGESIZE;
-		sFLASH_EraseSector(External_Flash_Address);
-		Flash_Update_Index = (uint16_t)((External_Flash_Address - EXTERNAL_FLASH_OTA_ADDRESS) / bufferSize);
-	}
+    /* Is the Data Buffer successfully programmed to SPI Flash memory */
+    if (0 == memcmp(writeBuffer, readBuffer, bufferSize))
+    {
+        External_Flash_Address += bufferSize;
+        Flash_Update_Index += 1;
+    }
+    else
+    {
+        /* Erase the problematic SPI Flash pages and back off the chunk index */
+        External_Flash_Address = ((uint32_t)(External_Flash_Address / sFLASH_PAGESIZE)) * sFLASH_PAGESIZE;
+        sFLASH_EraseSector(External_Flash_Address);
+        Flash_Update_Index = (uint16_t)((External_Flash_Address - EXTERNAL_FLASH_OTA_ADDRESS) / bufferSize);
+    }
 
-	LED_Toggle(LED_RGB);
+    LED_Toggle(LEDRED);
 
-	return Flash_Update_Index;
+    return Flash_Update_Index;
 
 #endif
 }
@@ -1574,14 +1585,14 @@ void FLASH_End(void)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	FLASH_OTA_Update_SysFlag = 0x00000005;
-	Save_SystemFlags();
+    FLASH_OTA_Update_SysFlag = 0x00000005;
+    Save_SystemFlags();
 
-	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00000005);
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00000005);
 
     USB_Cable_Config(DISABLE);
 
-	NVIC_SystemReset();
+    NVIC_SystemReset();
 
 #endif
 }
@@ -1633,9 +1644,9 @@ void FLASH_Read_ServerPublicKey(uint8_t *keyBuffer)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	sFLASH_ReadBuffer(keyBuffer,
-			EXTERNAL_FLASH_SERVER_PUBLIC_KEY_ADDRESS,
-			EXTERNAL_FLASH_SERVER_PUBLIC_KEY_LENGTH);
+    sFLASH_ReadBuffer(keyBuffer,
+            EXTERNAL_FLASH_SERVER_PUBLIC_KEY_ADDRESS,
+            EXTERNAL_FLASH_SERVER_PUBLIC_KEY_LENGTH);
 
 #endif
 }
@@ -1645,9 +1656,9 @@ void FLASH_Read_CorePrivateKey(uint8_t *keyBuffer)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-	sFLASH_ReadBuffer(keyBuffer,
-			EXTERNAL_FLASH_CORE_PRIVATE_KEY_ADDRESS,
-			EXTERNAL_FLASH_CORE_PRIVATE_KEY_LENGTH);
+    sFLASH_ReadBuffer(keyBuffer,
+            EXTERNAL_FLASH_CORE_PRIVATE_KEY_ADDRESS,
+            EXTERNAL_FLASH_CORE_PRIVATE_KEY_LENGTH);
 
 #endif
 }
@@ -1665,40 +1676,40 @@ void FACTORY_Flash_Reset(void)
 void BACKUP_Flash_Reset(void)
 {
     //Restore the Backup programmed application firmware from External Flash
-	FLASH_Restore(EXTERNAL_FLASH_BKP_ADDRESS);
+    FLASH_Restore(EXTERNAL_FLASH_BKP_ADDRESS);
 
-	Finish_Update();
+    Finish_Update();
 }
 
 void OTA_Flash_Reset(void)
 {
-	//First take backup of the current application firmware to External Flash
-	FLASH_Backup(EXTERNAL_FLASH_BKP_ADDRESS);
+    //First take backup of the current application firmware to External Flash
+    FLASH_Backup(EXTERNAL_FLASH_BKP_ADDRESS);
 
-	FLASH_OTA_Update_SysFlag = 0x00005555;
-	Save_SystemFlags();
-	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
+    FLASH_OTA_Update_SysFlag = 0x00005555;
+    Save_SystemFlags();
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
 
-	//Restore the OTA programmed application firmware from External Flash
-	FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
+    //Restore the OTA programmed application firmware from External Flash
+    FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
 
-	OTA_FLASHED_Status_SysFlag = 0x00000001;
+    OTA_FLASHED_Status_SysFlag = 0x00000001;
 
-	Finish_Update();
+    Finish_Update();
 }
 
 bool OTA_Flashed_GetStatus(void)
 {
-	if(OTA_FLASHED_Status_SysFlag == 0x00000001)
-		return true;
-	else
-		return false;
+    if(OTA_FLASHED_Status_SysFlag == 0x00000001)
+        return true;
+    else
+        return false;
 }
 
 void OTA_Flashed_ResetStatus(void)
 {
     OTA_FLASHED_Status_SysFlag = 0x00000000;
-	Save_SystemFlags();
+    Save_SystemFlags();
 }
 
 /*******************************************************************************
@@ -1709,10 +1720,10 @@ void OTA_Flashed_ResetStatus(void)
 *******************************************************************************/
 void Finish_Update(void)
 {
-	FLASH_OTA_Update_SysFlag = 0x00005000;
-	Save_SystemFlags();
+    FLASH_OTA_Update_SysFlag = 0x00005000;
+    Save_SystemFlags();
 
-	RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005000);
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005000);
 
     USB_Cable_Config(DISABLE);
 
@@ -1727,43 +1738,43 @@ void Finish_Update(void)
   */
 uint32_t Compute_CRC32(uint8_t *pBuffer, uint32_t bufferSize)
 {
-	uint32_t i, j;
-	uint32_t Data;
+    uint32_t i, j;
+    uint32_t Data;
 
-	CRC_ResetDR();
+    CRC_ResetDR();
 
-	i = bufferSize >> 2;
+    i = bufferSize >> 2;
 
-	while (i--)
-	{
-		Data = *((uint32_t *)pBuffer);
-		pBuffer += 4;
+    while (i--)
+    {
+        Data = *((uint32_t *)pBuffer);
+        pBuffer += 4;
 
-		Data = __RBIT(Data);//reverse the bit order of input Data
-		CRC->DR = Data;
-	}
+        Data = __RBIT(Data);//reverse the bit order of input Data
+        CRC->DR = Data;
+    }
 
-	Data = CRC->DR;
-	Data = __RBIT(Data);//reverse the bit order of output Data
+    Data = CRC->DR;
+    Data = __RBIT(Data);//reverse the bit order of output Data
 
-	i = bufferSize & 3;
+    i = bufferSize & 3;
 
-	while (i--)
-	{
-		Data ^= (uint32_t)*pBuffer++;
+    while (i--)
+    {
+        Data ^= (uint32_t)*pBuffer++;
 
-		for (j = 0 ; j < 8 ; j++)
-		{
-			if (Data & 1)
-				Data = (Data >> 1) ^ 0xEDB88320;
-			else
-				Data >>= 1;
-		}
-	}
+        for (j = 0 ; j < 8 ; j++)
+        {
+            if (Data & 1)
+                Data = (Data >> 1) ^ 0xEDB88320;
+            else
+                Data >>= 1;
+        }
+    }
 
-	Data ^= 0xFFFFFFFF;
+    Data ^= 0xFFFFFFFF;
 
-	return Data;
+    return Data;
 }
 
 void Get_Unique_Device_ID(uint8_t *Device_ID)

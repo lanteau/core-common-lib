@@ -15,7 +15,6 @@ CSRC += $(TARGET_SPARK_SRC_PATH)/cc3000_spi.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/hw_config.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/sst25vf_spi.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/system_stm32f4xx.c
-CSRC += $(TARGET_SPARK_SRC_PATH)/usb_pwr.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/debug.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/panic.c
 CSRC += $(TARGET_SPARK_SRC_PATH)/spi_bus.c

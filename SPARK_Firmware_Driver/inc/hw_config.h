@@ -12,7 +12,7 @@
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation, either
   version 3 of the License, or (at your option) any later version.
-_WriteBackupRegister
+
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -33,7 +33,8 @@ _WriteBackupRegister
 #include "config.h"
 #include "sst25vf_spi.h"
 #include "cc3000_common.h"
-#include "usb_type.h"
+//#include "usb_type.h"
+#include <stdbool.h>
 
 enum SpiBusOwner {
     BUS_OWNER_NONE = 0,
@@ -60,7 +61,7 @@ typedef enum
 
 typedef enum
 {
-	LED1 = 0, LED2 = 1, LED3 = 2, LED4 = 3, LED3_LED4_LED2 = 231
+	LEDGREEN = 0, LEDORANGE = 1, LEDRED = 2, LEDBLUE = 3
 } Led_TypeDef;
 
 typedef enum
@@ -136,8 +137,8 @@ typedef struct ServerAddress {
 									| FLASH_WRProt_Pages12to15 )
 
 //Extended LED Types
-#define LED_RGB				LED3_LED4_LED2
-#define LED_USER			LED1
+// #define LED_RGB				LED3_LED4_LED2
+#define LED_USER			LEDGREEN
 
 //RGB Basic Colors
 #define RGB_COLOR_RED		0xFF0000
@@ -186,12 +187,12 @@ DIO_Error_TypeDef DIO_SetState(DIO_TypeDef Dx, DIO_State_TypeDef State);
 
 void UI_Timer_Configure(void);
 
-void LED_SetRGBColor(uint32_t RGB_Color);
-void LED_SetSignalingColor(uint32_t RGB_Color);
-void LED_Signaling_Start(void);
-void LED_Signaling_Stop(void);
-void LED_Signaling_Override(void) __attribute__ ((weak));
-void LED_SetBrightness(uint8_t brightness); /* 0 = off, 255 = full brightness */
+// void LED_SetRGBColor(uint32_t RGB_Color);
+// void LED_SetSignalingColor(uint32_t RGB_Color);
+// void LED_Signaling_Start(void);
+// void LED_Signaling_Stop(void);
+// void LED_Signaling_Override(void) __attribute__ ((weak));
+// void LED_SetBrightness(uint8_t brightness); /* 0 = off, 255 = full brightness */
 
 void LED_Init(Led_TypeDef Led);
 void LED_On(Led_TypeDef Led);

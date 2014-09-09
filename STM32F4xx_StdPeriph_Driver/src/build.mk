@@ -27,6 +27,7 @@ CSRC += $(TARGET_STDPERIPH_SRC_PATH)/stm32f4xx_rtc.c
 CSRC += $(TARGET_STDPERIPH_SRC_PATH)/stm32f4xx_spi.c
 CSRC += $(TARGET_STDPERIPH_SRC_PATH)/stm32f4xx_tim.c
 CSRC += $(TARGET_STDPERIPH_SRC_PATH)/stm32f4xx_usart.c
+CSRC += $(TARGET_STDPERIPH_SRC_PATH)/stm32f4xx_syscfg.c
 
 # C++ source files included in this build.
 CPPSRC +=

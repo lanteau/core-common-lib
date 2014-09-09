@@ -244,7 +244,7 @@ int SpiIO(eSPIOperation op, const uint8_t *ptrData, uint32_t ulDataSize, int wai
 
         eCC3000States current = State();
 	/* Disable DMA Channels */
-	CC3000_SPI_DMA_Channels(DISABLE);
+	CC3000_SPI_DMA_Streams(DISABLE);
 
 
 	if (op == eRead)
