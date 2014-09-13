@@ -1127,28 +1127,27 @@ void sFLASH_SPI_Init(void)
     sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, ENABLE);
 
     /* Configure sFLASH_SPI pins: SCK */
-    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN
+                                    | sFLASH_SPI_MOSI_GPIO_PIN
+                                    | sFLASH_SPI_MISO_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
-
-    /* Configure sFLASH_SPI pins: MOSI */
-    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
-    GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
-
-    /* Configure sFLASH_SPI pins: MISO */
-    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
     /* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
     GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
+
+    /* Connect SPI2 pins to SPI alternate function */
+    GPIO_PinAFConfig(GPIOB, sFLASH_SPI_SCK_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
+    GPIO_PinAFConfig(GPIOB, sFLASH_SPI_MOSI_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
+    GPIO_PinAFConfig(GPIOB, sFLASH_SPI_MISO_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
 
     /*!< Deselect the FLASH: Chip Select high */
     sFLASH_CS_HIGH();

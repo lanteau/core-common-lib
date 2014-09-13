@@ -47,7 +47,7 @@
 /* Exported macro ------------------------------------------------------------*/
 
 //LEDs (STM32F4 discovery is PD12-15)
-#define LEDn                                   4
+#define LEDn                              4
 #define LEDGREEN_GPIO_PIN                 GPIO_Pin_12
 #define LEDGREEN_GPIO_PORT                GPIOD
 #define LEDGREEN_GPIO_CLK                 RCC_AHB1Periph_GPIOD
@@ -73,7 +73,7 @@
 #define BUTTON1_EXTI_PORT_SOURCE          EXTI_PortSourceGPIOA
 #define BUTTON1_EXTI_PIN_SOURCE           GPIO_PinSource0
 #define BUTTON1_EXTI_IRQn                 EXTI0_IRQn
-#define BUTTON1_EXTI_TRIGGER          	  EXTI_Trigger_Falling
+#define BUTTON1_EXTI_TRIGGER              EXTI_Trigger_Falling
 #define BUTTON2_GPIO_PIN                  0
 #define BUTTON2_GPIO_PORT                 0
 #define BUTTON2_GPIO_CLK                  0
@@ -84,7 +84,7 @@
 #define BUTTON2_EXTI_PORT_SOURCE          0
 #define BUTTON2_EXTI_PIN_SOURCE           0
 #define BUTTON2_EXTI_IRQn                 0
-#define BUTTON2_EXTI_TRIGGER   		        0
+#define BUTTON2_EXTI_TRIGGER              0
 
 //Header IOs
 #define Dn                                8
@@ -158,24 +158,27 @@
 //SST25 FLASH Interface pins
 #define sFLASH_SPI                        SPI2
 #define sFLASH_SPI_CLK                    RCC_APB1Periph_SPI2
-#define sFLASH_SPI_CLK_CMD            		RCC_APB1PeriphClockCmd
+#define sFLASH_SPI_CLK_CMD                RCC_APB1PeriphClockCmd
 #define sFLASH_SPI_SCK_GPIO_PIN           GPIO_Pin_13                    /* PB.13 */
+#define sFLASH_SPI_SCK_GPIO_PIN_SOURCE    GPIO_PinSource13
 #define sFLASH_SPI_SCK_GPIO_PORT          GPIOB                        /* GPIOB */
 #define sFLASH_SPI_SCK_GPIO_CLK           RCC_AHB1Periph_GPIOB
 #define sFLASH_SPI_MISO_GPIO_PIN          GPIO_Pin_14                    /* PB.14 */
+#define sFLASH_SPI_MISO_GPIO_PIN_SOURCE   GPIO_PinSource14
 #define sFLASH_SPI_MISO_GPIO_PORT         GPIOB                        /* GPIOB */
 #define sFLASH_SPI_MISO_GPIO_CLK          RCC_AHB1Periph_GPIOB
 #define sFLASH_SPI_MOSI_GPIO_PIN          GPIO_Pin_15                    /* PB.15 */
+#define sFLASH_SPI_MOSI_GPIO_PIN_SOURCE   GPIO_PinSource15
 #define sFLASH_SPI_MOSI_GPIO_PORT         GPIOB                        /* GPIOB */
 #define sFLASH_SPI_MOSI_GPIO_CLK          RCC_AHB1Periph_GPIOB
 #define sFLASH_MEM_CS_GPIO_PIN            GPIO_Pin_9                    /* PB.09 */
 #define sFLASH_MEM_CS_GPIO_PORT           GPIOB                        /* GPIOB */
 #define sFLASH_MEM_CS_GPIO_CLK            RCC_AHB1Periph_GPIOB
 
-#define sFLASH_SPI_BAUDRATE_PRESCALER     SPI_BaudRatePrescaler_2
+#define sFLASH_SPI_BAUDRATE_PRESCALER     SPI_BaudRatePrescaler_4
 
-#define USB_DISCONNECT_GPIO_PIN       		GPIO_Pin_12
-#define USB_DISCONNECT_GPIO_PORT      		GPIOA
+#define USB_DISCONNECT_GPIO_PIN           GPIO_Pin_12
+#define USB_DISCONNECT_GPIO_PORT          GPIOA
 #define USB_DISCONNECT_GPIO_CLK           RCC_AHB1Periph_GPIOA
 
 #define UI_TIMER_FREQUENCY                100                            /* 100Hz -> 10ms */
