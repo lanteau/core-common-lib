@@ -118,12 +118,15 @@
 #define CC3000_SPI_CLK                    RCC_APB1Periph_SPI2
 #define CC3000_SPI_CLK_CMD                RCC_APB1PeriphClockCmd
 #define CC3000_SPI_SCK_GPIO_PIN           GPIO_Pin_13                    /* PB.13 */
+#define CC3000_SPI_SCK_GPIO_PIN_SOURCE    GPIO_PinSource13
 #define CC3000_SPI_SCK_GPIO_PORT          GPIOB                        /* GPIOB */
 #define CC3000_SPI_SCK_GPIO_CLK           RCC_AHB1Periph_GPIOB
 #define CC3000_SPI_MISO_GPIO_PIN          GPIO_Pin_14                    /* PB.14 */
+#define CC3000_SPI_MISO_GPIO_PIN_SOURCE   GPIO_PinSource14
 #define CC3000_SPI_MISO_GPIO_PORT         GPIOB                        /* GPIOB */
 #define CC3000_SPI_MISO_GPIO_CLK          RCC_AHB1Periph_GPIOB
 #define CC3000_SPI_MOSI_GPIO_PIN          GPIO_Pin_15                    /* PB.15 */
+#define CC3000_SPI_MOSI_GPIO_PIN_SOURCE   GPIO_PinSource15
 #define CC3000_SPI_MOSI_GPIO_PORT         GPIOB                        /* GPIOB */
 #define CC3000_SPI_MOSI_GPIO_CLK          RCC_AHB1Periph_GPIOB
 #define CC3000_WIFI_CS_GPIO_PIN           GPIO_Pin_12                    /* PB.12 */

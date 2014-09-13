@@ -25,8 +25,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hw_config.h"
-//#include "usb_lib.h"
-//#include "usb_pwr.h"
 #include <string.h>
 #include "spi_bus.h"
 #include "debug.h"
@@ -200,10 +198,6 @@ void NVIC_Configuration(void)
     /* Configure the NVIC Preemption Priority Bits */
     /* 4 bits for pre-emption priority(0-15 PreemptionPriority) and 0 bits for subpriority(0 SubPriority) */
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
-
-    /* Configure the Priority Group to 2 bits */
-    /* 2 bits for pre-emption priority(0-3 PreemptionPriority) and 2 bits for subpriority(0-3 SubPriority) */
-    //OLD: NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 }
 
 /*******************************************************************************
@@ -841,6 +835,7 @@ void CC3000_WIFI_Init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(CC3000_WIFI_CS_GPIO_PORT, &GPIO_InitStructure);
 
     /* Deselect CC3000 */
@@ -848,6 +843,7 @@ void CC3000_WIFI_Init(void)
 
     /* Configure CC3000_WIFI pins: Enable */
     GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_EN_GPIO_PIN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_Init(CC3000_WIFI_EN_GPIO_PORT, &GPIO_InitStructure);
 
     /* Disable CC3000 */
@@ -865,7 +861,9 @@ void CC3000_SPI_Init(void)
     SPI_InitTypeDef SPI_InitStructure;
 
     /* CC3000_SPI_SCK_GPIO, CC3000_SPI_MOSI_GPIO and CC3000_SPI_MISO_GPIO Peripheral clock enable */
-    RCC_AHB1PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK | CC3000_SPI_MOSI_GPIO_CLK | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
+    RCC_AHB1PeriphClockCmd(CC3000_SPI_SCK_GPIO_CLK 
+                            | CC3000_SPI_MOSI_GPIO_CLK
+                            | CC3000_SPI_MISO_GPIO_CLK, ENABLE);
 
     /* CC3000_SPI Peripheral clock enable */
     CC3000_SPI_CLK_CMD(CC3000_SPI_CLK, ENABLE);
@@ -884,9 +882,11 @@ void CC3000_SPI_Init(void)
 
     /* Configure CC3000_SPI pins: MISO */
     GPIO_InitStructure.GPIO_Pin = CC3000_SPI_MISO_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(CC3000_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+
+    GPIO_PinAFConfig(CC3000_SPI_SCK_GPIO_PORT, CC3000_SPI_SCK_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
+    GPIO_PinAFConfig(CC3000_SPI_MOSI_GPIO_PORT, CC3000_SPI_MOSI_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
+    GPIO_PinAFConfig(CC3000_SPI_MISO_GPIO_PORT, CC3000_SPI_MISO_GPIO_PIN_SOURCE, GPIO_AF_SPI2);
 
     /* CC3000_SPI Config */
     SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -978,9 +978,9 @@ void CC3000_SPI_DMA_Init(void)
 
 void CC3000_SPI_DMA_Streams(FunctionalState NewState)
 {
-    /* Enable/Disable DMA RX Channel */
+    /* Enable/Disable DMA RX Stream */
     DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, NewState);
-    /* Enable/Disable DMA TX Channel */
+    /* Enable/Disable DMA TX Stream */
     DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, NewState);
 }
 
@@ -1025,7 +1025,7 @@ void CC3000_Interrupt_Enable(void)
     SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE);
 
     /* Clear the EXTI line pending flag */
-    EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE );
+    EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE);
 
     /* Configure and Enable CC3000_WIFI_INT EXTI line */
     EXTI_InitStructure.EXTI_Line = CC3000_WIFI_INT_EXTI_LINE;
@@ -1089,21 +1089,21 @@ void sFLASH_SPI_DeInit(void)
     /* sFLASH_SPI Peripheral clock disable */
     sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, DISABLE);
 
-    /* Configure sFLASH_SPI pins: SCK */
+    /* Configure sFLASH_SPI SCK to default values
+     * (input, 2MHz, Push-Pull, No pullup) */ 
+    GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
-    /* Configure sFLASH_SPI pins: MISO */
+    /* Configure sFLASH_SPI MISO to default values */
     GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
     GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
 
-    /* Configure sFLASH_SPI pins: MOSI */
+    /* Configure sFLASH_SPI MOSI to default values */
     GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
     GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
 
-    /* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
+    /* Configure sFLASH_SPI CS to default values */
     GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
     GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 }
@@ -1120,25 +1120,33 @@ void sFLASH_SPI_Init(void)
 
     /* sFLASH_MEM_CS_GPIO, sFLASH_SPI_MOSI_GPIO, sFLASH_SPI_MISO_GPIO
        and sFLASH_SPI_SCK_GPIO Periph clock enable */
-    RCC_AHB1PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK | sFLASH_SPI_MOSI_GPIO_CLK | sFLASH_SPI_MISO_GPIO_CLK |
-                         sFLASH_SPI_SCK_GPIO_CLK, ENABLE);
+    RCC_AHB1PeriphClockCmd(sFLASH_MEM_CS_GPIO_CLK
+                            | sFLASH_SPI_MOSI_GPIO_CLK
+                            | sFLASH_SPI_MISO_GPIO_CLK
+                            | sFLASH_SPI_SCK_GPIO_CLK, ENABLE);
 
     /* sFLASH_SPI Periph clock enable */
     sFLASH_SPI_CLK_CMD(sFLASH_SPI_CLK, ENABLE);
 
     /* Configure sFLASH_SPI pins: SCK */
-    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN
-                                    | sFLASH_SPI_MOSI_GPIO_PIN
-                                    | sFLASH_SPI_MISO_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_SCK_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(sFLASH_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
 
+    /* Configure sFLASH_SPI pins: MOSI */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MOSI_GPIO_PIN;
+    GPIO_Init(sFLASH_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+
+    /* Configure sFLASH_SPI pins: MISO */
+    GPIO_InitStructure.GPIO_Pin = sFLASH_SPI_MISO_GPIO_PIN;
+    GPIO_Init(sFLASH_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+
     /* Configure sFLASH_MEM_CS_GPIO_PIN pin: sFLASH CS pin */
     GPIO_InitStructure.GPIO_Pin = sFLASH_MEM_CS_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -1187,26 +1195,6 @@ void sFLASH_CS_HIGH(void)
     handle_spi_request();
 }
 
-/*******************************************************************************
-* Function Name  : USB_Disconnect_Config
-* Description    : Disconnect pin configuration
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void USB_Disconnect_Config(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    /* Enable USB_DISCONNECT GPIO clock */
-    RCC_AHB1PeriphClockCmd(USB_DISCONNECT_GPIO_CLK, ENABLE);
-
-    /* USB_DISCONNECT_GPIO_PIN used as USB pull-up */
-    GPIO_InitStructure.GPIO_Pin = USB_DISCONNECT_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-    GPIO_Init(USB_DISCONNECT_GPIO_PORT, &GPIO_InitStructure);
-}
 
 /*******************************************************************************
 * Function Name  : Set_USBClock
@@ -1216,9 +1204,6 @@ void USB_Disconnect_Config(void)
 *******************************************************************************/
 void Set_USBClock(void)
 {
-    // /* Select USBCLK source */
-    // RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
-
     /* Enable the USB clock */
     RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, ENABLE);
 }
@@ -1273,24 +1258,6 @@ void USB_Interrupts_Config(void)
     // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;                                //OLD: 0x00
     // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     // NVIC_Init(&NVIC_InitStructure);
-}
-
-/*******************************************************************************
-* Function Name  : USB_Cable_Config
-* Description    : Software Connection/Disconnection of USB Cable
-* Input          : None.
-* Return         : Status
-*******************************************************************************/
-void USB_Cable_Config (FunctionalState NewState)
-{
-    if (NewState != DISABLE)
-    {
-        GPIO_ResetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
-    }
-    else
-    {
-        GPIO_SetBits(USB_DISCONNECT_GPIO_PORT, USB_DISCONNECT_GPIO_PIN);
-    }
 }
 
 void Load_SystemFlags(void)
@@ -1723,8 +1690,6 @@ void Finish_Update(void)
     Save_SystemFlags();
 
     RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005000);
-
-    USB_Cable_Config(DISABLE);
 
     NVIC_SystemReset();
 }
