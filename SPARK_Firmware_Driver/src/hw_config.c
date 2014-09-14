@@ -1493,7 +1493,7 @@ void FLASH_Begin(uint32_t sFLASH_Address)
     //LED_SetRGBColor(RGB_COLOR_MAGENTA);
     LED_On(LEDRED);
 
-    OTA_FLASHED_Status_SysFlag = 0x00000000;
+    OTA_FLASHED_Status_SysFlag = 0x0000;
     //FLASH_OTA_Update_SysFlag = 0x5555;
     Save_SystemFlags();
     //BKP_WriteBackupRegister(BKP_DR10, 0x5555);
@@ -1551,10 +1551,10 @@ void FLASH_End(void)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-    FLASH_OTA_Update_SysFlag = 0x00000005;
+    FLASH_OTA_Update_SysFlag = 0x0005;
     Save_SystemFlags();
 
-    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00000005);
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x0005);
 
     USB_Cable_Config(DISABLE);
 
@@ -1652,21 +1652,21 @@ void OTA_Flash_Reset(void)
     //First take backup of the current application firmware to External Flash
     FLASH_Backup(EXTERNAL_FLASH_BKP_ADDRESS);
 
-    FLASH_OTA_Update_SysFlag = 0x00005555;
+    FLASH_OTA_Update_SysFlag = 0x5555;
     Save_SystemFlags();
-    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005555);
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x5555);
 
     //Restore the OTA programmed application firmware from External Flash
     FLASH_Restore(EXTERNAL_FLASH_OTA_ADDRESS);
 
-    OTA_FLASHED_Status_SysFlag = 0x00000001;
+    OTA_FLASHED_Status_SysFlag = 0x0001;
 
     Finish_Update();
 }
 
 bool OTA_Flashed_GetStatus(void)
 {
-    if(OTA_FLASHED_Status_SysFlag == 0x00000001)
+    if(OTA_FLASHED_Status_SysFlag == 0x0001)
         return true;
     else
         return false;
@@ -1674,7 +1674,7 @@ bool OTA_Flashed_GetStatus(void)
 
 void OTA_Flashed_ResetStatus(void)
 {
-    OTA_FLASHED_Status_SysFlag = 0x00000000;
+    OTA_FLASHED_Status_SysFlag = 0x0000;
     Save_SystemFlags();
 }
 
@@ -1686,10 +1686,10 @@ void OTA_Flashed_ResetStatus(void)
 *******************************************************************************/
 void Finish_Update(void)
 {
-    FLASH_OTA_Update_SysFlag = 0x00005000;
+    FLASH_OTA_Update_SysFlag = 0x5000;
     Save_SystemFlags();
 
-    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x00005000);
+    RTC_WriteBackupRegister(RTC_BKP_DR10, 0x5000);
 
     NVIC_SystemReset();
 }
