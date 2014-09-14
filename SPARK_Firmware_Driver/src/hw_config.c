@@ -363,11 +363,11 @@ void IWDG_Reset_Enable(uint32_t msTimeout)
     IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 
     /* IWDG counter clock: LSI/256 */
-    IWDG_SetPrescaler(IWDG_Prescaler_256);
+    IWDG_SetPrescaler(IWDG_Prescaler_128);
 
         /* IWDG timeout may vary due to LSI frequency dispersion */
-        msTimeout = ((msTimeout * 40) / 256); //Assuming LSI Frequency = 40000
-        if (msTimeout > 0xfff) msTimeout = 0xfff;   // 26214.4
+        msTimeout = ((msTimeout * 32) / 128); // LSI Frequency = 32kHz
+        if (msTimeout > 0xfff) msTimeout = 0xfff;
 
     IWDG_SetReload((uint16_t)msTimeout);
 
