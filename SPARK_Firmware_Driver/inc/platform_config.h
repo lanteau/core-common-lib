@@ -86,6 +86,27 @@
 #define BUTTON2_EXTI_IRQn                 0
 #define BUTTON2_EXTI_TRIGGER              0
 
+//Power Strip GPIO
+#define RELAY_1_PIN                       GPIO_Pin_7
+#define RELAY_1_PORT                      GPIOE
+#define RELAY_1_CLK                       RCC_AHB1Periph_GPIOE
+#define RELAY_2_PIN                       GPIO_Pin_8
+#define RELAY_2_PORT                      GPIOE
+#define RELAY_2_CLK                       RCC_AHB1Periph_GPIOE
+#define RELAY_3_PIN                       GPIO_Pin_9
+#define RELAY_3_PORT                      GPIOE
+#define RELAY_3_CLK                       RCC_AHB1Periph_GPIOE
+#define RELAY_4_PIN                       GPIO_Pin_10
+#define RELAY_4_PORT                      GPIOE
+#define RELAY_4_CLK                       RCC_AHB1Periph_GPIOE
+#define RELAY_5_PIN                       GPIO_Pin_11
+#define RELAY_5_PORT                      GPIOE
+#define RELAY_5_CLK                       RCC_AHB1Periph_GPIOE
+#define RELAY_6_PIN                       GPIO_Pin_12
+#define RELAY_6_PORT                      GPIOE
+#define RELAY_6_CLK                       RCC_AHB1Periph_GPIOE
+
+
 //Header IOs
 #define Dn                                8
 #define D0_GPIO_PIN                       GPIO_Pin_7
