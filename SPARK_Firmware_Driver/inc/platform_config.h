@@ -33,9 +33,9 @@
 #define SPARK_SFLASH_ENABLE
 #define SPARK_RTC_ENABLE
 
-#define         ID1          (0x1FFFF7E8)
-#define         ID2          (0x1FFFF7EC)
-#define         ID3          (0x1FFFF7F0)
+#define         ID1          (0x1FFF7A10)
+#define         ID2          (0x1FFF7A14)
+#define         ID3          (0x1FFF7A18)
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
@@ -47,19 +47,19 @@
 /* Exported macro ------------------------------------------------------------*/
 
 //LEDs (STM32F4 discovery is PD12-15)
-#define LEDn                              4
-#define LEDGREEN_GPIO_PIN                 GPIO_Pin_12
-#define LEDGREEN_GPIO_PORT                GPIOD
-#define LEDGREEN_GPIO_CLK                 RCC_AHB1Periph_GPIOD
-#define LEDORANGE_GPIO_PIN                GPIO_Pin_13
-#define LEDORANGE_GPIO_PORT               GPIOD
-#define LEDORANGE_GPIO_CLK                RCC_AHB1Periph_GPIOD
-#define LEDRED_GPIO_PIN                   GPIO_Pin_14
-#define LEDRED_GPIO_PORT                  GPIOD
-#define LEDRED_GPIO_CLK                   RCC_AHB1Periph_GPIOD
-#define LEDBLUE_GPIO_PIN                  GPIO_Pin_15
-#define LEDBLUE_GPIO_PORT                 GPIOD
-#define LEDBLUE_GPIO_CLK                  RCC_AHB1Periph_GPIOD
+#define LEDn                                4
+#define LED1_GPIO_PIN                       GPIO_Pin_14 /* Red onboard LED */
+#define LED1_GPIO_PORT                      GPIOD
+#define LED1_GPIO_CLK                       RCC_AHB1Periph_GPIOD
+#define LED2_GPIO_PIN                       GPIO_Pin_9 /* RGB: Blue LED */
+#define LED2_GPIO_PORT                      GPIOE
+#define LED2_GPIO_CLK                       RCC_AHB1Periph_GPIOE
+#define LED3_GPIO_PIN                       GPIO_Pin_11 /* RGB: Red LED */
+#define LED3_GPIO_PORT                      GPIOE
+#define LED3_GPIO_CLK                       RCC_AHB1Periph_GPIOE
+#define LED4_GPIO_PIN                       GPIO_Pin_13
+#define LED4_GPIO_PORT                      GPIOE
+#define LED4_GPIO_CLK                       RCC_AHB1Periph_GPIOE
 
 //Push Buttons (User button is PA0 on STM32F4 discovery)
 #define BUTTONn                           1
@@ -154,8 +154,7 @@
 #define CC3000_SPI_RX_DMA_IRQn            DMA1_Stream3_IRQn
 #define CC3000_SPI_TX_DMA_IRQn            DMA1_Stream4_IRQn
 
-#define CC3000_SPI_DR_BASE                ((uint32_t)0x40003800)    /* SPI2_BASE | 0x0C */
-
+#define CC3000_SPI_DR_BASE                ((uint32_t)(&(CC3000_SPI->DR)))
 #define CC3000_SPI_BAUDRATE_PRESCALER     SPI_BaudRatePrescaler_4
 
 //SST25 FLASH Interface pins

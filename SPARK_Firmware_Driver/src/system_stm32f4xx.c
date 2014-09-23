@@ -208,6 +208,9 @@ static void SetSysClock(void);
   */
 void SystemInit(void)
 {
+  /* Enable full access to the FPU */
+  SCB->CPACR |= 0xF << 20;
+
   /* Reset the RCC clock configuration to the default reset state ------------*/
   /* Set HSION bit */
   RCC->CR |= (uint32_t)0x00000001;

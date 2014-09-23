@@ -73,13 +73,13 @@ typedef enum
 
 typedef struct
 {
-	gcSpiHandleRx SPIRxHandler;
-	unsigned short usTxPacketLength;
-	unsigned short usRxPacketLength;
-	volatile eCC3000States ulSpiState;
-	unsigned char *pTxPacket;
-	unsigned char *pRxPacket;
-	volatile int abort;
+    gcSpiHandleRx SPIRxHandler;
+    unsigned short usTxPacketLength;
+    unsigned short usRxPacketLength;
+    volatile eCC3000States ulSpiState;
+    unsigned char *pTxPacket;
+    unsigned char *pRxPacket;
+    volatile int abort;
 } tSpiInformation;
 
 tSpiInformation sSpiInformation;
@@ -186,21 +186,20 @@ static inline int Reserve(eCC3000States ns)
 void SpiOpen(gcSpiHandleRx pfRxHandler)
 {
 
-	sSpiInformation.ulSpiState = eSPI_STATE_POWERUP;
+    sSpiInformation.ulSpiState = eSPI_STATE_POWERUP;
+    sSpiInformation.SPIRxHandler = pfRxHandler;
+    sSpiInformation.pRxPacket = wlan_rx_buffer;
+    sSpiInformation.usRxPacketLength = 0;
+    sSpiInformation.pTxPacket = NULL;
+    sSpiInformation.usTxPacketLength = 0;
 
-	sSpiInformation.SPIRxHandler = pfRxHandler;
-	sSpiInformation.pRxPacket = wlan_rx_buffer;
-	sSpiInformation.usRxPacketLength = 0;
-	sSpiInformation.pTxPacket = NULL;
-	sSpiInformation.usTxPacketLength = 0;
-
-	/* Enable Interrupt */
-        tSLInformation.WriteWlanPin( WLAN_DISABLE );
-        Delay_Microsecond(MS2u(300));
- 	tSLInformation.WlanInterruptEnable();
-        Delay_Microsecond(MS2u(1));
-        tSLInformation.WriteWlanPin( WLAN_ENABLE );
-        WaitFor(eSPI_STATE_INITIALIZED);
+    /* Enable Interrupt */
+  tSLInformation.WriteWlanPin( WLAN_DISABLE );
+  Delay_Microsecond(MS2u(300));
+  tSLInformation.WlanInterruptEnable();
+  Delay_Microsecond(MS2u(1));
+  tSLInformation.WriteWlanPin( WLAN_ENABLE );
+  WaitFor(eSPI_STATE_INITIALIZED);
 
 }
 
@@ -214,25 +213,25 @@ void SpiClose(void)
 
 void SpiResumeSpi(void)
 {
-	//
-	//Enable CC3000 SPI IRQ Line Interrupt
-	//
-	NVIC_EnableIRQ(CC3000_WIFI_INT_EXTI_IRQn);
+    //
+    //Enable CC3000 SPI IRQ Line Interrupt
+    //
+    NVIC_EnableIRQ(CC3000_WIFI_INT_EXTI_IRQn);
 
 }
 
 void SpiPauseSpi(void)
 {
-	//
-	//Disable CC3000 SPI IRQ Line Interrupt
-	//
-	NVIC_DisableIRQ(CC3000_WIFI_INT_EXTI_IRQn);
+    //
+    //Disable CC3000 SPI IRQ Line Interrupt
+    //
+    NVIC_DisableIRQ(CC3000_WIFI_INT_EXTI_IRQn);
 }
 
 
 /**
  * @brief  This function TX and RX SPI data and configures interrupt generation
- * 		at the end of the TX interrupt
+ *      at the end of the TX interrupt
  * @param  ulTrueFlase True for a read or False for write
  * @param  ptrData Pointer to data to be written
  * @param  ulDataSize The size of the data to be written or read
@@ -242,28 +241,28 @@ void SpiPauseSpi(void)
 int SpiIO(eSPIOperation op, const uint8_t *ptrData, uint32_t ulDataSize, int waitOnCompletion)
 {
 
-        eCC3000States current = State();
-	/* Disable DMA Channels */
-	CC3000_SPI_DMA_Streams(DISABLE);
+  eCC3000States current = State();
+    /* Disable DMA Channels */
+    CC3000_SPI_DMA_Streams(DISABLE);
 
 
-	if (op == eRead)
-	{
-		CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) ptrData, ulDataSize);
-		CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) spi_readCommand, ulDataSize);
-	}
-	else
-	{
-		CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) sSpiInformation.pRxPacket, ulDataSize);
-		CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) ptrData, ulDataSize);
-	}
+    if (op == eRead)
+    {
+        CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) ptrData, ulDataSize);
+        CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) spi_readCommand, ulDataSize);
+    }
+    else
+    {
+        CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) sSpiInformation.pRxPacket, ulDataSize);
+        CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) ptrData, ulDataSize);
+    }
 
-	/* Enable DMA SPI Interrupt */
-	DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
+    /* Enable DMA SPI Interrupt */
+    DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
 
-	/* Enable DMA Streams */
-	CC3000_SPI_DMA_Streams(ENABLE);
-	return waitOnCompletion ? Still(current) : 0;
+    /* Enable DMA Streams */
+    CC3000_SPI_DMA_Streams(ENABLE);
+    return waitOnCompletion ? Still(current) : 0;
 
 }
 
@@ -354,96 +353,94 @@ long SpiWrite(unsigned char *ucBuf, unsigned short usLength)
  */
 void SPI_DMA_IntHandler(void)
 {
-	unsigned long ucTxFinished, ucRxFinished;
-	unsigned short data_to_recv = 0;
+    unsigned long ucTxFinished, ucRxFinished;
+    unsigned short data_to_recv = 0;
 
-	ucTxFinished = DMA_GetFlagStatus(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG );
-	ucRxFinished = DMA_GetFlagStatus(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG );
-	switch(sSpiInformation.ulSpiState)
-	{
-	case eSPI_STATE_READ_IRQ:
-	  // Both Done
-          if (ucTxFinished && ucRxFinished)
-          {
-                  /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
-                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
+    ucTxFinished = DMA_GetFlagStatus(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG );
+    ucRxFinished = DMA_GetFlagStatus(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG );
+    switch(sSpiInformation.ulSpiState)
+    {
+    case eSPI_STATE_READ_IRQ:
+        // Both Done
+        if (ucTxFinished && ucRxFinished)
+        {
+            /* Clear SPI_DMA Interrupt Pending Flags */
+            DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+            DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
-                  sSpiInformation.ulSpiState = eSPI_STATE_READ_PROCEED;
+            sSpiInformation.ulSpiState = eSPI_STATE_READ_PROCEED;
 
-                  uint16_t *pnetlen = (uint16_t *) &sSpiInformation.pRxPacket[READ_OFFSET_TO_LENGTH];
-                  data_to_recv = ntohs(*pnetlen);
-                  if (data_to_recv)
-                     {
-                       /* We will read ARRAY_SIZE(spi_readCommand) + data_to_recv. is it odd? */
+            uint16_t *pnetlen = (uint16_t *) &sSpiInformation.pRxPacket[READ_OFFSET_TO_LENGTH];
+            data_to_recv = ntohs(*pnetlen);
+            if (data_to_recv)
+            {
+                 /* We will read ARRAY_SIZE(spi_readCommand) + data_to_recv. is it odd? */
+                if ((data_to_recv +  arraySize(spi_readCommand)) & 1)
+                {
+                     /* Odd so make it even */
 
-                       if ((data_to_recv +  arraySize(spi_readCommand)) & 1)
-                         {
-                           /* Odd so make it even */
+                     data_to_recv++;
+                }
 
-                           data_to_recv++;
-                         }
+                /* Read the whole payload in at the beginning of the buffer
+                 * Will it fit?
+                 */
+                SPARK_ASSERT(data_to_recv <= arraySize(wlan_rx_buffer));
+                SpiIO(eRead,sSpiInformation.pRxPacket,data_to_recv, FALSE);
+            }
+        }
+        break;
 
-                       /* Read the whole payload in at the beginning of the buffer
-                        * Will it fit?
-                        */
-                       SPARK_ASSERT(data_to_recv <= arraySize(wlan_rx_buffer));
-                       SpiIO(eRead,sSpiInformation.pRxPacket,data_to_recv, FALSE);
-                     }
-          }
-	  break;
+    case eSPI_STATE_READ_PROCEED:
+        //
+        // All the data was read - finalize handling by switching to the task
+        // and calling from task Event Handler
+        //
+        if (ucRxFinished)
+        {
+            /* Clear SPI_DMA Interrupt Pending Flags */
+            DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+            DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
-	case eSPI_STATE_READ_PROCEED:
-          //
-          // All the data was read - finalize handling by switching to the task
-          // and calling from task Event Handler
-          //
-          if (ucRxFinished)
-          {
-                  /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
-                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
+            SpiPauseSpi();
+            SetState(eSPI_STATE_IDLE, eDeAssert);
+            // Call out to the Unsolicited handler
+            // It will handle the event or leave it there for an outstanding opcode
+            // It it handles it the it Will resume the SPI ISR
+            // It it dose not handles it and there are not outstanding Opcodes the it Will resume the SPI ISR
+            sSpiInformation.SPIRxHandler(sSpiInformation.pRxPacket);
+        }
+        break;
 
-                  SpiPauseSpi();
-                  SetState(eSPI_STATE_IDLE, eDeAssert);
-                  // Call out to the Unsolicited handler
-                  // It will handle the event or leave it there for an outstanding opcode
-                  // It it handles it the it Will resume the SPI ISR
-                  // It it dose not handles it and there are not outstanding Opcodes the it Will resume the SPI ISR
-                  sSpiInformation.SPIRxHandler(sSpiInformation.pRxPacket);
+    case eSPI_STATE_FIRST_WRITE:
+    case eSPI_STATE_WRITE_PROCEED:
+        if (ucTxFinished)
+        {
+            /* Loop until SPI busy */
+            while (SPI_I2S_GetFlagStatus(CC3000_SPI, SPI_I2S_FLAG_BSY ) != RESET)
+            {
+            }
 
-          }
-          break;
+            /* Clear SPI_DMA Interrupt Pending Flags */
+            DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
+            DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
 
-	case eSPI_STATE_FIRST_WRITE:
-	case eSPI_STATE_WRITE_PROCEED:
-          if (ucTxFinished)
-          {
-                  /* Loop until SPI busy */
-                  while (SPI_I2S_GetFlagStatus(CC3000_SPI, SPI_I2S_FLAG_BSY ) != RESET)
-                  {
-                  }
+            if ( sSpiInformation.ulSpiState == eSPI_STATE_FIRST_WRITE)
+            {
+                sSpiInformation.ulSpiState = eSPI_STATE_WRITE_PROCEED;
+            }
+            else
+            {
+                SetState(eSPI_STATE_IDLE, eDeAssert);
+            }
+        }
+        break;
 
-                  /* Clear SPI_DMA Interrupt Pending Flags */
-                  DMA_ClearFlag(CC3000_SPI_TX_DMA_STREAM, CC3000_SPI_TX_DMA_TCFLAG);
-                  DMA_ClearFlag(CC3000_SPI_RX_DMA_STREAM, CC3000_SPI_RX_DMA_TCFLAG);
+    default:
+        INVALID_CASE(sSpiInformation.ulSpiState);
+        break;
 
-                  if ( sSpiInformation.ulSpiState == eSPI_STATE_FIRST_WRITE)
-                  {
-                      sSpiInformation.ulSpiState = eSPI_STATE_WRITE_PROCEED;
-                  }
-                  else
-                  {
-                      SetState(eSPI_STATE_IDLE, eDeAssert);
-                  }
-          }
-          break;
-
-	default:
-	  INVALID_CASE(sSpiInformation.ulSpiState);
-	  break;
-
-	}
+    }
 }
 
 void handle_spi_request()
@@ -465,14 +462,14 @@ void handle_spi_request()
  */
 void SPI_EXTI_IntHandler(void)
 {
-	//Pending is cleared in first level of ISR handler
-	if (!tSLInformation.ReadWlanInterruptPin())
-	{
-	    switch(sSpiInformation.ulSpiState)
-	    {
-	    case eSPI_STATE_POWERUP:
-	        sSpiInformation.ulSpiState = eSPI_STATE_INITIALIZED;
-	      break;
+    //Pending is cleared in first level of ISR handler
+    if (!tSLInformation.ReadWlanInterruptPin())
+    {
+        switch(sSpiInformation.ulSpiState)
+        {
+        case eSPI_STATE_POWERUP:
+            sSpiInformation.ulSpiState = eSPI_STATE_INITIALIZED;
+          break;
             case eSPI_STATE_IDLE:
                 if (try_acquire_spi_bus(BUS_OWNER_CC3000)) {
                     SetState(eSPI_STATE_READ_IRQ, eAssert);
@@ -481,13 +478,13 @@ void SPI_EXTI_IntHandler(void)
                     SetState(eSPI_STATE_READ_PREP_IRQ, eNone);
                     WARN("CC3000 cannot lock bus - scheduling later (owner=%d)", current_bus_owner());
                 }
-		break;
+        break;
             case eSPI_STATE_WRITE_WAIT_IRQ:
               sSpiInformation.ulSpiState = eSPI_STATE_WRITE_PROCEED;
               break;
             default:
               break;
-	    }
-	}
+        }
+    }
 }
 

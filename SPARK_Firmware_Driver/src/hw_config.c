@@ -54,9 +54,9 @@ const uint16_t DIO_GPIO_PIN[] = {D0_GPIO_PIN, D1_GPIO_PIN, D2_GPIO_PIN, D3_GPIO_
 const uint32_t DIO_GPIO_CLK[] = {D0_GPIO_CLK, D1_GPIO_CLK, D2_GPIO_CLK, D3_GPIO_CLK,
                                 D4_GPIO_CLK, D5_GPIO_CLK, D6_GPIO_CLK, D7_GPIO_CLK};
 
-GPIO_TypeDef* LED_GPIO_PORT[] = {LEDGREEN_GPIO_PORT, LEDORANGE_GPIO_PORT, LEDRED_GPIO_PORT, LEDBLUE_GPIO_PORT};
-const uint16_t LED_GPIO_PIN[] = {LEDGREEN_GPIO_PIN, LEDORANGE_GPIO_PIN, LEDRED_GPIO_PIN, LEDBLUE_GPIO_PIN};
-const uint32_t LED_GPIO_CLK[] = {LEDGREEN_GPIO_CLK, LEDORANGE_GPIO_CLK, LEDRED_GPIO_CLK, LEDBLUE_GPIO_CLK};
+GPIO_TypeDef* LED_GPIO_PORT[] = {LED1_GPIO_PORT, LED2_GPIO_PORT, LED3_GPIO_PORT, LED4_GPIO_PORT};
+const uint16_t LED_GPIO_PIN[] = {LED1_GPIO_PIN, LED2_GPIO_PIN, LED3_GPIO_PIN, LED4_GPIO_PIN};
+const uint32_t LED_GPIO_CLK[] = {LED1_GPIO_CLK, LED2_GPIO_CLK, LED3_GPIO_CLK, LED4_GPIO_CLK};
 __IO uint16_t LED_TIM_CCR[] = {0x0000, 0x0000, 0x0000, 0x0000};
 __IO uint16_t LED_TIM_CCR_SIGNAL[] = {0x0000, 0x0000, 0x0000, 0x0000};  //TIM CCR Signal Override
 uint8_t LED_RGB_OVERRIDE = 0;
@@ -145,7 +145,7 @@ void Set_System(void)
     PWR_BackupAccessCmd(ENABLE);
 
     /* Should we execute System Standby mode */
-    if(RTC_ReadBackupRegister(RTC_BKP_DR9) == 0x0000A5A5)
+    if(RTC_ReadBackupRegister(RTC_BKP_DR9) == 0xA5A5)
     {
         /* Clear Standby mode system flag */
         RTC_WriteBackupRegister(RTC_BKP_DR9, 0xFFFFFFFF);
@@ -267,6 +267,18 @@ void RTC_Configuration(void)
     NVIC_InitTypeDef NVIC_InitStructure;
     RTC_AlarmTypeDef RTCAlarm_InitStructure;
 
+    RTC_DateTypeDef  RTC_DateStructure;
+    RTC_TimeTypeDef  RTC_TimeStructure;
+    RTC_InitTypeDef  RTC_InitStructure;
+
+    __IO uint32_t uwAsynchPrediv = 0;
+    __IO uint32_t uwSynchPrediv = 0;
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
+
+    /* Allow access to BKP Domain */
+    PWR_BackupAccessCmd(ENABLE);
+
 
     /* Configure EXTI Line17(RTC Alarm) to generate an interrupt on rising edge */
     EXTI_ClearITPendingBit(EXTI_Line17);
@@ -317,7 +329,11 @@ void RTC_Configuration(void)
     }
     else
     {
-        /* StandBy flag is not set */
+        /* StandBy flag is not set, configure RTC. */
+
+        /* Reset Backup Domain */
+        RCC_BackupResetCmd(ENABLE);
+        RCC_BackupResetCmd(DISABLE);
 
         /* Enable LSE */
         RCC_LSEConfig(RCC_LSE_ON);
@@ -337,21 +353,45 @@ void RTC_Configuration(void)
         /* Wait for RTC registers synchronization */
         RTC_WaitForSynchro();
 
+        uwSynchPrediv = 0xFF;
+        uwAsynchPrediv = 0x7F;
+
+        /* Configure the RTC data register and RTC prescaler */
+        RTC_InitStructure.RTC_AsynchPrediv = uwAsynchPrediv;
+        RTC_InitStructure.RTC_SynchPrediv = uwSynchPrediv;
+        RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
+        RTC_Init(&RTC_InitStructure);
+
+        /* Set the date: Monday September 15th 2014 */
+        RTC_DateStructure.RTC_Year = 0x14;
+        RTC_DateStructure.RTC_Month = RTC_Month_September;
+        RTC_DateStructure.RTC_Date = 0x15;
+        RTC_DateStructure.RTC_WeekDay = RTC_Weekday_Monday;
+        RTC_SetDate(RTC_Format_BCD, &RTC_DateStructure);
+
+        /* Set the time to 05h 20mn 00s AM */
+        RTC_TimeStructure.RTC_H12     = RTC_H12_AM;
+        RTC_TimeStructure.RTC_Hours   = 0x05;
+        RTC_TimeStructure.RTC_Minutes = 0x20;
+        RTC_TimeStructure.RTC_Seconds = 0x00;
+
+        RTC_SetTime(RTC_Format_BCD, &RTC_TimeStructure);
+
         /* Configure the RTC WakeUp Clock source: CK_SPRE (1Hz) */
         RTC_WakeUpClockConfig(RTC_WakeUpClock_CK_SPRE_16bits);
-        RTC_SetWakeUpCounter(0x0);
+        //RTC_SetWakeUpCounter(0x0);
 
         // TODO: Configure RTC_AlarmA
 
         /* Enable the RTC Wakeup and RTC AlarmA interrupt */
-        RTC_ITConfig(RTC_IT_WUT | RTC_IT_ALRA, ENABLE);
+        //RTC_ITConfig(RTC_IT_WUT | RTC_IT_ALRA, ENABLE);
     }
 }
 
 void Enter_STANDBY_Mode(void)
 {
     /* Execute Standby mode on next system reset */
-    RTC_WriteBackupRegister(RTC_BKP_DR9, 0x0000A5A5);
+    RTC_WriteBackupRegister(RTC_BKP_DR9, 0xA5A5);
 
     /* Reset System */
     NVIC_SystemReset();
@@ -471,6 +511,10 @@ void UI_Timer_Configure(void)
     TIM_OC4Init(TIM1, &TIM_OCInitStructure);
     TIM_OC4PreloadConfig(TIM1, TIM_OCPreload_Disable);
 
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource13, GPIO_AF_TIM1);
+
     TIM_ARRPreloadConfig(TIM1, ENABLE);
 
     /* TIM1 enable counter */
@@ -480,46 +524,46 @@ void UI_Timer_Configure(void)
     TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
-// void LED_SetRGBColor(uint32_t RGB_Color)
-// {
-//   lastRGBColor = RGB_Color;
-//  LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
-//  LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
-//  LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
-// }
+void LED_SetRGBColor(uint32_t RGB_Color)
+{
+    lastRGBColor = RGB_Color;
+    LED_TIM_CCR[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
+    LED_TIM_CCR[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
+    LED_TIM_CCR[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
+}
 
-// void LED_SetSignalingColor(uint32_t RGB_Color)
-// {
-//   lastSignalColor = RGB_Color;
-//  LED_TIM_CCR_SIGNAL[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
-//  LED_TIM_CCR_SIGNAL[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
-//  LED_TIM_CCR_SIGNAL[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
-// }
+void LED_SetSignalingColor(uint32_t RGB_Color)
+{
+    lastSignalColor = RGB_Color;
+    LED_TIM_CCR_SIGNAL[2] = (uint16_t)((((RGB_Color & 0xFF0000) >> 16) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16); //LED3 -> Red Led
+    LED_TIM_CCR_SIGNAL[3] = (uint16_t)((((RGB_Color & 0xFF00) >> 8) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);    //LED4 -> Green Led
+    LED_TIM_CCR_SIGNAL[1] = (uint16_t)(((RGB_Color & 0xFF) * LED_RGB_BRIGHTNESS * (TIM1->ARR + 1)) >> 16);             //LED2 -> Blue Led
+}
 
-// void LED_Signaling_Start(void)
-// {
-//  LED_RGB_OVERRIDE = 1;
+void LED_Signaling_Start(void)
+{
+    LED_RGB_OVERRIDE = 1;
 
-//  LED_Off(LED_RGB);
-// }
+    LED_Off(LED_RGB);
+}
 
-// void LED_Signaling_Stop(void)
-// {
-//  LED_RGB_OVERRIDE = 0;
+void LED_Signaling_Stop(void)
+{
+    LED_RGB_OVERRIDE = 0;
 
-//  LED_On(LED_RGB);
-// }
+    LED_On(LED_RGB);
+}
 
-// void LED_SetBrightness(uint8_t brightness)
-// {
-//   LED_RGB_BRIGHTNESS = brightness;
+void LED_SetBrightness(uint8_t brightness)
+{
+    LED_RGB_BRIGHTNESS = brightness;
 
-//   /* Recompute RGB scale using new value for brightness. */
-//  if (LED_RGB_OVERRIDE)
-//     LED_SetSignalingColor(lastSignalColor);
-//   else
-//     LED_SetRGBColor(lastRGBColor);
-// }
+    /* Recompute RGB scale using new value for brightness. */
+    if (LED_RGB_OVERRIDE)
+        LED_SetSignalingColor(lastSignalColor);
+    else
+        LED_SetRGBColor(lastRGBColor);
+}
 
 /**
   * @brief  Configures LED GPIO.
@@ -537,7 +581,7 @@ void LED_Init(Led_TypeDef Led)
 
     /* Configure the GPIO_LED pin as alternate function push-pull */
     GPIO_InitStructure.GPIO_Pin = LED_GPIO_PIN[Led];
-    if(Led == LEDGREEN || Led == LEDORANGE || Led == LEDRED || Led == LEDBLUE)
+    if(Led == LED_USER)
     {
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
         GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -563,30 +607,27 @@ void LED_On(Led_TypeDef Led)
 {
     switch(Led)
     {
-    case LEDGREEN:
-    case LEDORANGE:
-    case LEDRED:
-    case LEDBLUE:
+    case LED_USER:
         LED_GPIO_PORT[Led]->BSRRL = LED_GPIO_PIN[Led];
         break;
 
-    // case LED_RGB:    //LED_SetRGBColor() should be called first for this Case
-    //  if(LED_RGB_OVERRIDE == 0)
-    //  {
-    //      TIM1->CCR2 = LED_TIM_CCR[2];
-    //      TIM1->CCR3 = LED_TIM_CCR[3];
-    //      TIM1->CCR1 = LED_TIM_CCR[1];
-    //  }
-    //  else
-    //  {
-    //      TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
-    //      TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
-    //      TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
-    //  }
+    case LED_RGB:    //LED_SetRGBColor() should be called first for this Case
+     if(LED_RGB_OVERRIDE == 0)
+     {
+         TIM1->CCR2 = LED_TIM_CCR[2];
+         TIM1->CCR3 = LED_TIM_CCR[3];
+         TIM1->CCR1 = LED_TIM_CCR[1];
+     }
+     else
+     {
+         TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
+         TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
+         TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
+     }
 
-    //  led_fade_step = NUM_LED_FADE_STEPS - 1;
-    //  led_fade_direction = -1; /* next fade is falling */
-    //  break;
+     led_fade_step = NUM_LED_FADE_STEPS - 1;
+     led_fade_direction = -1; /* next fade is falling */
+     break;
     default:
         break;
     }
@@ -603,20 +644,17 @@ void LED_Off(Led_TypeDef Led)
 {
     switch(Led)
     {
-    case LEDGREEN:
-    case LEDORANGE:
-    case LEDRED:
-    case LEDBLUE:
+    case LED_USER:
         LED_GPIO_PORT[Led]->BSRRH = LED_GPIO_PIN[Led];
         break;
 
-    // case LED_RGB:
-    //  TIM1->CCR2 = 0;
-    //  TIM1->CCR3 = 0;
-    //  TIM1->CCR1 = 0;
-    //  led_fade_step = 0;
-    //  led_fade_direction = 1; /* next fade is rising. */
-    //  break;
+    case LED_RGB:
+        TIM1->CCR2 = 0;
+        TIM1->CCR3 = 0;
+        TIM1->CCR1 = 0;
+        led_fade_step = 0;
+        led_fade_direction = 1; /* next fade is rising. */
+        break;
     default:
         break;
     }
@@ -633,51 +671,49 @@ void LED_Toggle(Led_TypeDef Led)
 {
     switch(Led)
     {
-    case LEDGREEN:
-    case LEDORANGE:
-    case LEDRED:
-    case LEDBLUE:
+    case LED_USER:
         LED_GPIO_PORT[Led]->ODR ^= LED_GPIO_PIN[Led];
         break;
-    default:
+
+    case LED_RGB://LED_SetRGBColor() and LED_On() should be called first for this Case
+        if(LED_RGB_OVERRIDE == 0)
+        {
+            if (TIM1->CCR2)
+                TIM1->CCR2 = 0;
+            else
+                TIM1->CCR2 = LED_TIM_CCR[2];
+
+            if (TIM1->CCR3)
+                TIM1->CCR3 = 0;
+            else
+                TIM1->CCR3 = LED_TIM_CCR[3];
+
+            if (TIM1->CCR1)
+                TIM1->CCR1 = 0;
+            else
+                TIM1->CCR1 = LED_TIM_CCR[1];
+        }
+        else
+        {
+            if (TIM1->CCR2)
+                TIM1->CCR2 = 0;
+            else
+                TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
+
+            if (TIM1->CCR3)
+                TIM1->CCR3 = 0;
+            else
+                TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
+
+            if (TIM1->CCR1)
+                TIM1->CCR1 = 0;
+            else
+                TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
+        }
         break;
 
-    // case LED_RGB://LED_SetRGBColor() and LED_On() should be called first for this Case
-    //  if(LED_RGB_OVERRIDE == 0)
-    //  {
-    //   if (TIM1->CCR2)
-    //  TIM1->CCR2 = 0;
-    //   else
-    //  TIM1->CCR2 = LED_TIM_CCR[2];
-
-    //   if (TIM1->CCR3)
-    //  TIM1->CCR3 = 0;
-    //   else
-    //  TIM1->CCR3 = LED_TIM_CCR[3];
-
-    //   if (TIM1->CCR1)
-    //  TIM1->CCR1 = 0;
-    //   else
-    //  TIM1->CCR1 = LED_TIM_CCR[1];
-    //  }
-    //  else
-    //  {
-    //   if (TIM1->CCR2)
-    //  TIM1->CCR2 = 0;
-    //   else
-    //  TIM1->CCR2 = LED_TIM_CCR_SIGNAL[2];
-
-    //   if (TIM1->CCR3)
-    //  TIM1->CCR3 = 0;
-    //   else
-    //  TIM1->CCR3 = LED_TIM_CCR_SIGNAL[3];
-
-    //   if (TIM1->CCR1)
-    //  TIM1->CCR1 = 0;
-    //   else
-    //  TIM1->CCR1 = LED_TIM_CCR_SIGNAL[1];
-    //  }
-    //  break;
+    default:
+        break;
     }
 }
 
@@ -690,29 +726,29 @@ void LED_Toggle(Led_TypeDef Led)
   */
 void LED_Fade(Led_TypeDef Led)
 {
-  /* Update position in fade. */
-  if (led_fade_step == 0)
-    led_fade_direction = 1; /* Switch to fade growing. */
-  else if (led_fade_step == NUM_LED_FADE_STEPS - 1)
-    led_fade_direction = -1; /* Switch to fade falling. */
+    /* Update position in fade. */
+    if (led_fade_step == 0)
+        led_fade_direction = 1; /* Switch to fade growing. */
+    else if (led_fade_step == NUM_LED_FADE_STEPS - 1)
+        led_fade_direction = -1; /* Switch to fade falling. */
 
-  led_fade_step += led_fade_direction;
+    led_fade_step += led_fade_direction;
 
-    // if(Led == LED_RGB)
-    // {
-    //  if(LED_RGB_OVERRIDE == 0)
-    //  {
-    //   TIM1->CCR2 = (((uint32_t) LED_TIM_CCR[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //   TIM1->CCR3 = (((uint32_t) LED_TIM_CCR[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //   TIM1->CCR1 = (((uint32_t) LED_TIM_CCR[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //  }
-    //  else
-    //  {
-    //   TIM1->CCR2 = (((uint32_t) LED_TIM_CCR_SIGNAL[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //   TIM1->CCR3 = (((uint32_t) LED_TIM_CCR_SIGNAL[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //   TIM1->CCR1 = (((uint32_t) LED_TIM_CCR_SIGNAL[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
-    //  }
-    // }
+    if(Led == LED_RGB)
+    {
+        if(LED_RGB_OVERRIDE == 0)
+        {
+            TIM1->CCR2 = (((uint32_t) LED_TIM_CCR[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+            TIM1->CCR3 = (((uint32_t) LED_TIM_CCR[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+            TIM1->CCR1 = (((uint32_t) LED_TIM_CCR[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+        }
+        else
+        {
+            TIM1->CCR2 = (((uint32_t) LED_TIM_CCR_SIGNAL[2]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+            TIM1->CCR3 = (((uint32_t) LED_TIM_CCR_SIGNAL[3]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+            TIM1->CCR1 = (((uint32_t) LED_TIM_CCR_SIGNAL[1]) * led_fade_step) / (NUM_LED_FADE_STEPS - 1);
+        }
+    }
 }
 
 /**
@@ -915,6 +951,12 @@ void CC3000_DMA_Config(CC3000_DMADirection_TypeDef Direction, uint8_t* buffer, u
     RCC_AHB1PeriphClockCmd(CC3000_SPI_DMA_CLK, ENABLE);
 
     DMA_InitStructure.DMA_PeripheralBaseAddr = CC3000_SPI_DR_BASE;
+    /* ADDED */
+    DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+    DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+    DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+    DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+    /* END ADDED */
     DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
@@ -957,8 +999,8 @@ void CC3000_SPI_DMA_Init(void)
     CC3000_SPI_Init();
 
     /* Configure DMA Peripheral but don't send data*/
-    CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) wlan_rx_buffer, 0);
-    CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) wlan_tx_buffer, 0);
+    //CC3000_DMA_Config(CC3000_DMA_RX, (uint8_t*) wlan_rx_buffer, 0);
+    //CC3000_DMA_Config(CC3000_DMA_TX, (uint8_t*) wlan_tx_buffer, 0);
 
     /* Enable SPI DMA TX Channel Transfer Complete Interrupt */
     DMA_ITConfig(CC3000_SPI_TX_DMA_STREAM, DMA_IT_TC, ENABLE);
@@ -971,9 +1013,9 @@ void CC3000_SPI_DMA_Init(void)
     SPI_Cmd(CC3000_SPI, ENABLE);
 
     /* Enable DMA RX Channel */
-    DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, ENABLE);
+    //DMA_Cmd(CC3000_SPI_RX_DMA_STREAM, ENABLE);
     /* Enable DMA TX Channel */
-    DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
+    //DMA_Cmd(CC3000_SPI_TX_DMA_STREAM, ENABLE);
 }
 
 void CC3000_SPI_DMA_Streams(FunctionalState NewState)
@@ -1014,15 +1056,17 @@ void CC3000_Interrupt_Enable(void)
 
     /* CC3000_WIFI_INT_GPIO clock enable */
     RCC_AHB1PeriphClockCmd(CC3000_WIFI_INT_GPIO_CLK, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /* Configure CC3000_WIFI pins: Interrupt */
     GPIO_InitStructure.GPIO_Pin = CC3000_WIFI_INT_GPIO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(CC3000_WIFI_INT_GPIO_PORT, &GPIO_InitStructure);
 
     /* Select the CC3000_WIFI_INT GPIO pin used as EXTI Line */
-    SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, CC3000_WIFI_INT_EXTI_PIN_SOURCE);
+    SYSCFG_EXTILineConfig(CC3000_WIFI_INT_EXTI_PORT_SOURCE, EXTI_PinSource11);
 
     /* Clear the EXTI line pending flag */
     EXTI_ClearFlag(CC3000_WIFI_INT_EXTI_LINE);
@@ -1490,8 +1534,8 @@ void FLASH_Begin(uint32_t sFLASH_Address)
 {
 #ifdef SPARK_SFLASH_ENABLE
 
-    //LED_SetRGBColor(RGB_COLOR_MAGENTA);
-    LED_On(LEDRED);
+    LED_SetRGBColor(RGB_COLOR_MAGENTA);
+    LED_On(LED_RGB);
 
     OTA_FLASHED_Status_SysFlag = 0x0000;
     //FLASH_OTA_Update_SysFlag = 0x5555;
@@ -1540,7 +1584,7 @@ uint16_t FLASH_Update(uint8_t *pBuffer, uint32_t bufferSize)
         Flash_Update_Index = (uint16_t)((External_Flash_Address - EXTERNAL_FLASH_OTA_ADDRESS) / bufferSize);
     }
 
-    LED_Toggle(LEDRED);
+    LED_Toggle(LED_RGB);
 
     return Flash_Update_Index;
 
@@ -1556,7 +1600,7 @@ void FLASH_End(void)
 
     RTC_WriteBackupRegister(RTC_BKP_DR10, 0x0005);
 
-    USB_Cable_Config(DISABLE);
+    //USB_Cable_Config(DISABLE);
 
     NVIC_SystemReset();
 

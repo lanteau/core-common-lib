@@ -61,7 +61,7 @@ typedef enum
 
 typedef enum
 {
-	LEDGREEN = 0, LEDORANGE = 1, LEDRED = 2, LEDBLUE = 3
+	LED1 = 0, LED2 = 1, LED3 = 2, LED4 = 3, LED3_LED4_LED2 = 231
 } Led_TypeDef;
 
 typedef enum
@@ -137,8 +137,8 @@ typedef struct ServerAddress {
 									| FLASH_WRProt_Pages12to15 )
 
 //Extended LED Types
-// #define LED_RGB				LED3_LED4_LED2
-#define LED_USER			LEDGREEN
+#define LED_RGB				LED3_LED4_LED2
+#define LED_USER			LED1
 
 //RGB Basic Colors
 #define RGB_COLOR_RED		0xFF0000
@@ -187,12 +187,12 @@ DIO_Error_TypeDef DIO_SetState(DIO_TypeDef Dx, DIO_State_TypeDef State);
 
 void UI_Timer_Configure(void);
 
-// void LED_SetRGBColor(uint32_t RGB_Color);
-// void LED_SetSignalingColor(uint32_t RGB_Color);
-// void LED_Signaling_Start(void);
-// void LED_Signaling_Stop(void);
-// void LED_Signaling_Override(void) __attribute__ ((weak));
-// void LED_SetBrightness(uint8_t brightness); /* 0 = off, 255 = full brightness */
+void LED_SetRGBColor(uint32_t RGB_Color);
+void LED_SetSignalingColor(uint32_t RGB_Color);
+void LED_Signaling_Start(void);
+void LED_Signaling_Stop(void);
+void LED_Signaling_Override(void) __attribute__ ((weak));
+void LED_SetBrightness(uint8_t brightness); /* 0 = off, 255 = full brightness */
 
 void LED_Init(Led_TypeDef Led);
 void LED_On(Led_TypeDef Led);
@@ -228,12 +228,12 @@ void sFLASH_CS_LOW(void);
 void sFLASH_CS_HIGH(void);
 
 /* USB hardware peripheral related methods */
-void USB_Disconnect_Config(void);
-void Set_USBClock(void);
-void Enter_LowPowerMode(void);
-void Leave_LowPowerMode(void);
-void USB_Interrupts_Config(void);
-void USB_Cable_Config(FunctionalState NewState);
+// void USB_Disconnect_Config(void);
+// void Set_USBClock(void);
+// void Enter_LowPowerMode(void);
+// void Leave_LowPowerMode(void);
+// void USB_Interrupts_Config(void);
+// void USB_Cable_Config(FunctionalState NewState);
 
 void Load_SystemFlags(void);
 void Save_SystemFlags(void);

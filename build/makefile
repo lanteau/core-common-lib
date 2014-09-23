@@ -41,7 +41,7 @@ INCLUDE_DIRS += CMSIS/Include
 INCLUDE_DIRS += CMSIS/Device/ST/STM32F4xx/Include
 
 # Compiler flags
-CFLAGS =  -g3 -gdwarf-2 -Os -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 
+CFLAGS =  -ggdb3 -gdwarf-2 -O0 -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 
 CFLAGS += $(patsubst %,-I$(SRC_PATH)/%,$(INCLUDE_DIRS)) -I.
 CFLAGS += -ffunction-sections -Wall -Wno-switch -fmessage-length=0 -Wfatal-errors
 
